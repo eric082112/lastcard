@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="最後一張！">
 <meta name="theme-color" content="#0B1D24">
-<meta name="lc-build" content="13">
+<meta name="lc-build" content="14">
 <link rel="apple-touch-icon" sizes="180x180" href="icon-180-5e34f975.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192-e4b190bb.png">
 <meta property="og:title" content="最後一張！">
@@ -335,28 +335,29 @@ input:focus{outline:3px solid var(--c1)}
 .card.joker{--col:#2A1B3D;color:#FFD45C}
 .card.joker .big{font-size:calc(var(--h)*.4);padding-bottom:12%}
 .card.balloon{--col:#58C4F0}
-.btn.sm{padding:7px 14px;font-size:14px;box-shadow:0 3px 0 rgba(0,0,0,.25)}
-.opt-row{display:flex;align-items:center;gap:10px}
-.optsum{font-size:12px;opacity:.8}
-#lbOpts{margin-bottom:1.6vh}
-.optsheet{width:min(92vw,520px)}
-.opt{display:flex;align-items:center;gap:16px;padding:7px 0;text-align:left;border-top:1px solid rgba(255,248,234,.12)}
-.opt>div{flex:1;min-width:0}
-.opt b{font-size:16px;font-weight:900}
-.opt p{margin:3px 0 0;font-size:12px;line-height:1.5;opacity:.82}
+#lbOpts{display:flex;align-items:center;gap:min(4vw,30px);margin-bottom:1.8vh}
+.optitem{display:flex;align-items:center;gap:10px;font-weight:800;font-size:15px}
 .sw{flex:none;width:58px;height:32px;border-radius:16px;border:0;padding:0;background:rgba(255,248,234,.22);position:relative;transition:background .15s}
 .sw::after{content:"";position:absolute;left:3px;top:3px;width:26px;height:26px;border-radius:50%;background:var(--cream);transition:transform .15s}
 .sw[aria-pressed=true]{background:var(--c2)}
 .sw[aria-pressed=true]::after{transform:translateX(26px)}
 .sw:disabled{opacity:.45}
-#balloonHud{position:absolute;right:calc(var(--ph)*.02);top:calc(var(--ph)*-.2);width:calc(var(--ph)*.52);height:calc(var(--ph)*.52);z-index:3;pointer-events:none;
-  transform-origin:50% 95%;animation:bob .5s ease-in-out infinite alternate;filter:drop-shadow(0 4px 6px rgba(0,0,0,.4))}
-#balloonHud svg{width:100%;height:100%}
-#balloonHud b{position:absolute;right:-18%;top:8%;background:var(--cream);color:var(--ink);font-weight:900;font-size:calc(var(--ph)*.15);padding:1px 7px;border-radius:999px}
+#balloonHud{position:fixed;width:min(15vh,56px);height:min(15vh,56px);z-index:45;pointer-events:none;transition:left .3s ease,top .3s ease;
+  filter:drop-shadow(0 4px 6px rgba(0,0,0,.45))}
+#balloonHud svg{width:100%;height:100%;transform-origin:50% 95%;animation:bob .5s ease-in-out infinite alternate}
+#balloonHud b{position:absolute;right:-22%;top:4%;background:var(--cream);color:var(--ink);font-weight:900;font-size:13px;padding:0 6px;border-radius:999px}
 #balloonHud b:empty{display:none}
-#balloonHud.puff svg{animation:puff .35s ease-out}
-@keyframes bob{from{transform:translateY(0) rotate(-7deg)}to{transform:translateY(-9%) rotate(7deg)}}
-@keyframes puff{0%{transform:scale(.5)}70%{transform:scale(1.25)}100%{transform:scale(1)}}
+#balloonHud.puff{animation:puff .35s ease-out}
+#balloonHud.swell{animation:swell .4s ease-in forwards}
+@keyframes bob{from{transform:translateY(0) rotate(-8deg)}to{transform:translateY(-10%) rotate(8deg)}}
+@keyframes puff{0%{transform:scale(.4)}70%{transform:scale(1.3)}100%{transform:scale(1)}}
+@keyframes swell{to{transform:scale(2.1)}}
+#pendHud{position:absolute;right:calc(var(--ph)*.06);top:calc(var(--ph)*-.1);z-index:3;background:var(--c0);color:#fff;font-weight:900;
+  font-size:calc(var(--ph)*.22);line-height:1.2;padding:1px 10px;border-radius:999px;border:3px solid var(--cream);box-shadow:0 3px 0 rgba(0,0,0,.35)}
+#pendHud.puff{animation:puff .3s ease-out}
+.card .bl{position:absolute;top:3%;right:5%;width:30%;filter:drop-shadow(0 1px 1px rgba(0,0,0,.35))}
+.card .bl2{position:absolute;top:23%;left:5%;width:19%}
+.card .bl svg,.card .bl2 svg{width:100%;height:auto;display:block}
 .popb{position:fixed;width:min(22vh,84px);height:min(22vh,84px);z-index:58;pointer-events:none}
 .popb svg{width:100%;height:100%}
 .seat.banned::after,#meChip.banned::after{content:"停";position:absolute;right:-6px;top:-6px;width:22px;height:22px;border-radius:50%;background:var(--c0);color:#fff;
@@ -403,7 +404,6 @@ input:focus{outline:3px solid var(--c1)}
           <button class="arrow" id="nNext" aria-label="增加玩家人數"><svg viewBox="0 0 16 16"><path d="M5 2l7 6-7 6z"/></svg></button>
           <button class="btn" id="startBtn">開始</button>
         </div>
-        <div class="opt-row"><button class="btn ghost sm" id="optBtn">玩法設定</button><span id="optSum" class="optsum"></span></div>
       </div>
     </div>
     <div class="menu-r">
@@ -417,7 +417,7 @@ input:focus{outline:3px solid var(--c1)}
         <input id="myName" maxlength="8" placeholder="你的名字" aria-label="你的名字" autocomplete="off" autocapitalize="off" spellcheck="false">
       </div>
     </div>
-    <div id="ver">第 13 版</div>
+    <div id="ver">第 14 版</div>
     <div id="menuTop"><button class="ico musicBtn" aria-label="背景音樂開關"></button></div>
     <button id="creditBtn">音樂出處</button>
   </section>
@@ -446,7 +446,7 @@ input:focus{outline:3px solid var(--c1)}
     </div>
     <div class="lb-r">
       <div id="lbPlayers"></div>
-      <div class="opt-row" id="lbOpts"><button class="btn ghost sm" id="lbOptBtn">遊戲設定</button><span id="lbOptSum" class="optsum"></span></div>
+      <div id="lbOpts"><span class="optitem">鬼牌<button class="sw" id="sw-joker" aria-label="鬼牌" aria-pressed="false"></button></span><span class="optitem">氣球<button class="sw" id="sw-balloon" aria-label="氣球" aria-pressed="false"></button></span></div>
       <div id="lbHost">
         <div class="picker-row">
           <span class="lbl">總人數</span>
@@ -471,7 +471,7 @@ input:focus{outline:3px solid var(--c1)}
           <g class="heads"><path d="M256 62l-9 0 9 14 9-14z"/><path d="M4 78l9 0-9-14-9 14z"/></g>
         </svg>
         <div id="pile"></div>
-        <div id="balloonHud" hidden><svg viewBox="0 0 100 100"><ellipse cx="50" cy="40" rx="27" ry="32" fill="#FF5A7A"/><path d="M44 70h12l-6 9z" fill="#E0405F"/><path d="M50 79q-7 8 0 15" fill="none" stroke="#FFF8EA" stroke-width="3" stroke-linecap="round"/><ellipse cx="40" cy="27" rx="6" ry="9" fill="#fff" opacity=".5"/></svg><b id="balloonN"></b></div>
+        <div id="pendHud" hidden></div>
       </div>
       <div id="actions">
         <button class="btn" id="unoBtn">UNO！</button>
@@ -504,13 +504,6 @@ input:focus{outline:3px solid var(--c1)}
       <button class="btn ghost" id="menuBtn">回主選單</button></div></div>
   </div>
 
-  <div class="modal" id="optsModal" hidden>
-    <div class="sheet optsheet"><h2>遊戲設定</h2>
-      <div class="opt"><div><b>鬼牌</b><p>每次抽牌有 1% 的機率抽到鬼牌，輪到你時打出去就直接獲勝。</p></div><button class="sw" id="sw-joker" aria-label="鬼牌" aria-pressed="false"></button></div>
-      <div class="opt"><div><b>氣球</b><p>每張牌有 5% 的機率是氣球。丟出去後，過幾個回合會在隨機一位玩家身上爆炸：抽 2 張，下一回合不能出牌。爆炸前有人再丟，就疊加上去。</p></div><button class="sw" id="sw-balloon" aria-label="氣球" aria-pressed="false"></button></div>
-      <p class="msg" id="optNote"></p>
-      <div class="row-btns"><button class="btn" id="optClose">好了</button></div></div>
-  </div>
   <div class="modal" id="creditModal" hidden>
     <div class="sheet"><h2>音樂出處</h2>
       <ul id="creditList"></ul>
@@ -518,6 +511,7 @@ input:focus{outline:3px solid var(--c1)}
       <div class="row-btns"><button class="btn" id="creditClose">關閉</button></div></div>
   </div>
   <div id="emoMenu" hidden><button data-k="egg" aria-label="丟雞蛋">🥚</button><button data-k="poo" aria-label="丟大便">💩</button></div>
+  <div id="balloonHud" hidden><svg viewBox="0 0 100 100"><ellipse cx="50" cy="40" rx="27" ry="32" fill="#FF5A7A"/><path d="M44 70h12l-6 9z" fill="#E0405F"/><path d="M50 79q-7 8 0 15" fill="none" stroke="#FFF8EA" stroke-width="3" stroke-linecap="round"/><ellipse cx="40" cy="27" rx="6" ry="9" fill="#fff" opacity=".5"/></svg><b id="balloonN"></b></div>
   <div id="fx"></div>
   <div id="ripple"></div>
   <svg id="orbit" aria-hidden="true"><ellipse/></svg>
@@ -557,28 +551,37 @@ const Engine = (() => {
     return a;
   }
   const isNum = c => c.v.length===1;
-  // 加開的玩法：鬼牌、氣球。這兩種牌不在 124 張裡，是抽牌時憑機率「變」出來的，用掉就消失
+  const isDraw = c => c.v==='d2' || c.v==='w4';
+  // 加開的玩法（房主在大廳開關）
+  //   鬼牌：抽牌時有 1% 機率抽到，不在 124 張裡，打出去直接獲勝
+  //   氣球：數字牌離開牌堆時有 5% 機率右上角帶著氣球（card.b）
   const JOKER_P = 0.01, BALLOON_P = 0.05;
-  function special(s,v){ return {id:s.nextId++,c:-2,v}; }
+  function mark(s,c){
+    if(c && isNum(c)){ if(s.opts && s.opts.balloon && s.rng()<BALLOON_P) c.b=1; else delete c.b; }
+    return c;
+  }
   function newGame(n,rng,opts){
     rng = rng||Math.random;
-    const o={joker:!!(opts&&opts.joker),balloon:!!(opts&&opts.balloon)};
-    const deck=shuffle(makeDeck(),rng), ids={nextId:1000};
-    const players=Array.from({length:n},()=>({hand:[]}));
-    // 開局發牌只會出現氣球，不會出現鬼牌（不然有人第一回合就贏了）
-    for(let k=0;k<7;k++) for(const p of players) p.hand.push(o.balloon && rng()<BALLOON_P ? special(ids,'balloon') : deck.pop());
-    let i=deck.length-1; while(!isNum(deck[i])) i--;      // 起始牌一定是數字牌
-    const first=deck.splice(i,1)[0];
+    const deck=shuffle(makeDeck(),rng);
     // discard 只留桌面上看得到的最上面 3 張；更早出過的牌放進 used，等於壓在牌堆最底下
-    return {players,deck,used:[],discard:[first],color:first.c,dir:1,turn:Math.floor(rng()*n),
-            phase:'play',drawnId:null,winner:-1,rng,
-            opts:o,nextId:ids.nextId,balloon:null,ban:players.map(()=>false)};
+    // pending：+2／+4 疊加到現在累積要抽幾張。balloon：{n 幾顆, left 還要傳幾次, at 在誰手上}
+    const s={players:Array.from({length:n},()=>({hand:[]})),deck,used:[],discard:[],color:0,dir:1,
+             turn:Math.floor(rng()*n),phase:'play',drawnId:null,winner:-1,rng,
+             opts:{joker:!!(opts&&opts.joker),balloon:!!(opts&&opts.balloon)},nextId:1000,balloon:null,pending:0};
+    for(let k=0;k<7;k++) for(const p of s.players) p.hand.push(mark(s,deck.pop()));   // 開局不會發到鬼牌
+    let i=deck.length-1; while(!isNum(deck[i])) i--;      // 起始牌一定是數字牌
+    const first=deck.splice(i,1)[0]; delete first.b;
+    s.discard=[first]; s.color=first.c;
+    return s;
   }
   const top = s => s.discard[s.discard.length-1];
+  const matches = (s,card) => card.c===-1 || card.c===s.color || card.v===top(s).v;
   function canPlay(s,card){
     if(s.phase==='over') return false;
     if(s.phase==='drawn' && card.id!==s.drawnId) return false;
-    return card.c<0 || card.c===s.color || card.v===top(s).v;      // 變色牌、鬼牌、氣球隨時能出
+    if(card.v==='joker') return true;
+    if(s.pending>0) return isDraw(card) && matches(s,card);       // 被罰抽時，只能再疊 +2 或 +4
+    return matches(s,card);
   }
   const playable = (s,pi) => s.players[pi].hand.filter(c=>canPlay(s,c));
   function step(s,pi,k){ const n=s.players.length; return ((pi+s.dir*k)%n+n)%n; }
@@ -593,30 +596,37 @@ const Engine = (() => {
     recycle(s,ev,false);
   }
   function take(s,ev){
-    const o=s.opts||{};
-    if(o.joker && s.rng()<JOKER_P) return special(s,'joker');
-    if(o.balloon && s.rng()<BALLOON_P) return special(s,'balloon');
+    if(s.opts && s.opts.joker && s.rng()<JOKER_P) return {id:s.nextId++,c:-2,v:'joker'};
     if(!s.deck.length) recycle(s,ev,true);       // 上面的牌抽完了，底下還沒洗的先洗
-    return s.deck.length ? s.deck.pop() : null;
+    return s.deck.length ? mark(s,s.deck.pop()) : null;
   }
-  // 每次換人出牌都經過這裡：氣球倒數、爆炸，以及被炸到的人停一回合
-  function endTurn(s,ev){
-    if(s.balloon && --s.balloon.fuse<=0){
-      const n=s.balloon.n, target=Math.floor(s.rng()*s.players.length);
-      s.balloon=null;
-      ev.push({t:'pop',pi:target,n});
-      give(s,target,2*n,ev);
-      s.ban[target]=true; ev.push({t:'ban',pi:target});
-    }
-    for(let g=0; g<s.players.length && s.ban && s.ban[s.turn]; g++){
-      s.ban[s.turn]=false; ev.push({t:'skip',pi:s.turn,ban:true}); s.turn=step(s,s.turn,1);
-    }
-    ev.push({t:'turn',pi:s.turn});
-  }
-  function give(s,pi,k,ev){
+  function give(s,pi,k,ev,clear){
     const cards=[];
     for(let i=0;i<k;i++){ const c=take(s,ev); if(!c) break; s.players[pi].hand.push(c); cards.push(c); }
-    if(cards.length) ev.push({t:'draw',pi,cards,penalty:true});
+    if(cards.length || clear) ev.push({t:'draw',pi,cards,penalty:true,clear:!!clear});
+  }
+  // 把累積的 +2／+4 全部抽走，並跳過這一回合
+  function takePending(s,ev){
+    const pi=s.turn;
+    give(s,pi,s.pending,ev,true); s.pending=0;
+    ev.push({t:'skip',pi}); s.turn=step(s,pi,1);
+  }
+  // 每次換人出牌都經過這裡
+  function endTurn(s,ev){
+    // 被罰抽的人手上沒有牌可以疊：強制抽牌
+    if(s.pending>0 && !playable(s,s.turn).length) takePending(s,ev);
+    // 氣球傳到現在要出牌的人手上；傳夠次數就在他身上爆炸
+    if(s.balloon){
+      s.balloon.at=s.turn; ev.push({t:'bmove',pi:s.turn});
+      if(--s.balloon.left<=0){
+        const pi=s.turn, n=s.balloon.n, extra=s.pending;
+        s.balloon=null;
+        ev.push({t:'pop',pi,n,extra});
+        give(s,pi,2*n+extra,ev,true); s.pending=0;        // 被炸到不能出牌，所以累積的 +2／+4 也一起吞下
+        ev.push({t:'skip',pi}); s.turn=step(s,pi,1);
+      }
+    }
+    ev.push({t:'turn',pi:s.turn});
   }
   function play(s,pi,cardId,color){
     const hand=s.players[pi].hand, idx=hand.findIndex(c=>c.id===cardId);
@@ -625,15 +635,10 @@ const Engine = (() => {
     if(card.c===-1 && !(color>=0 && color<4)) throw new Error('need color');
     const ev=[];
     hand.splice(idx,1);
-    if(card.c===-2){                              // 鬼牌、氣球：打出去就消失，不放到桌面上
-      s.phase='play'; s.drawnId=null;
-      ev.push({t:'play',pi,card,color:s.color,extra:[],gone:true});
-      if(card.v==='joker'){ s.phase='over'; s.winner=pi; s.byJoker=true; ev.push({t:'joker',pi},{t:'win',pi}); return ev; }
-      if(!hand.length){ s.phase='over'; s.winner=pi; ev.push({t:'win',pi}); return ev; }
-      if(s.balloon){ s.balloon.n++; s.balloon.fuse++; }           // 疊加：爆炸時多抽 2 張，也多撐一回合
-      else s.balloon={n:1,fuse:3+Math.floor(s.rng()*4)};          // 再過 2 到 5 個回合才爆
-      ev.push({t:'balloon',pi,n:s.balloon.n});
-      s.turn=step(s,pi,1); endTurn(s,ev);
+    s.phase='play'; s.drawnId=null;
+    if(card.v==='joker'){                         // 鬼牌：打出去就消失，直接獲勝
+      s.phase='over'; s.winner=pi; s.byJoker=true;
+      ev.push({t:'play',pi,card,color:s.color,extra:[],gone:true},{t:'joker',pi},{t:'win',pi});
       return ev;
     }
     const extra=[];
@@ -643,10 +648,14 @@ const Engine = (() => {
     }
     s.discard.push(card);
     s.color = card.c===-1 ? color : card.c;
-    s.phase='play'; s.drawnId=null;
     ev.push({t:'play',pi,card,color:s.color,extra});
     settlePile(s,ev);
     if(!hand.length){ s.phase='over'; s.winner=pi; ev.push({t:'win',pi}); return ev; }
+    if(card.b && isNum(card)){                    // 帶氣球的數字牌：場上出現氣球，或是再疊一顆
+      if(s.balloon) s.balloon.n++;
+      else s.balloon={n:1,left:3+Math.floor(s.rng()*13),at:pi};   // 傳 3 到 15 次後爆炸
+      ev.push({t:'balloon',pi,n:s.balloon.n});
+    }
     const n=s.players.length;
     if(card.v==='rev'){
       s.dir=-s.dir; ev.push({t:'rev',dir:s.dir});
@@ -654,17 +663,19 @@ const Engine = (() => {
       else s.turn=step(s,pi,1);
     } else if(card.v==='skip'){
       ev.push({t:'skip',pi:step(s,pi,1)}); s.turn=step(s,pi,2);
-    } else if(card.v==='d2' || card.v==='w4'){
-      const target=step(s,pi,1);
-      give(s,target,card.v==='d2'?2:4,ev);
-      ev.push({t:'skip',pi:target}); s.turn=step(s,pi,2);
+    } else if(isDraw(card)){                      // +2／+4：先累積起來，下一家可以再疊
+      s.pending+=card.v==='d2'?2:4;
+      s.turn=step(s,pi,1);
+      ev.push({t:'pend',total:s.pending,pi:s.turn});
     } else s.turn=step(s,pi,1);
     endTurn(s,ev);
     return ev;
   }
   function draw(s,pi){
     if(s.turn!==pi || s.phase!=='play') throw new Error('illegal draw');
-    const ev=[], c=take(s,ev);
+    const ev=[];
+    if(s.pending>0){ takePending(s,ev); endTurn(s,ev); return ev; }   // 不疊了，把累積的張數抽走
+    const c=take(s,ev);
     if(c){
       s.players[pi].hand.push(c);
       ev.push({t:'draw',pi,cards:[c]});
@@ -683,7 +694,7 @@ const Engine = (() => {
   const points = c => isNum(c) ? +c.v : (c.c===-1 || c.v==='joker' ? 50 : 20);
   // 出這張牌之後手上會剩幾張
   const leftAfter = (hand,card) => card.v==='all' ? hand.filter(c=>c.c!==card.c).length : hand.length-1;
-  return {makeDeck,newGame,top,canPlay,playable,step,play,draw,pass,penalty,points,leftAfter};
+  return {makeDeck,newGame,top,canPlay,playable,step,play,draw,pass,penalty,points,leftAfter,isDraw};
 })();
 
 // 電腦玩家
@@ -697,7 +708,7 @@ const Bot = {
     for(const c of opts){
       let sc;
       if(c.v==='joker') sc = 9999;                // 鬼牌：直接贏
-      else if(c.v==='balloon') sc = 9;            // 氣球：當成普通的牌丟
+      else if(s.pending>0) sc = c.v==='d2' ? 60 : 50;   // 被罰抽：能疊就疊，先用 +2，+4 留著
       else if(c.v==='w4') sc = danger ? 40 : -8;
       else if(c.v==='wild') sc = -5;
       else if(c.v==='d2') sc = 12 + (danger?30:0);
@@ -859,7 +870,8 @@ function cardEl(card){
     el.className='card c'+card.c+(card.v==='all'?' isall':'');
     const l=label(card), txt=(card.v==='d2')?' txt':'';
     el.innerHTML='<span class="bg">'+SHAPE[card.c]+'</span><span class="cor">'+l+'</span><span class="big'+txt+'">'+l+
-      '</span>'+(card.v==='all'?'<span class="cap">全出</span>':'')+'<span class="cor b">'+l+'</span>';
+      '</span>'+(card.v==='all'?'<span class="cap">全出</span>':'')+'<span class="cor b">'+l+'</span>'+
+      (card.b?'<span class="bl">'+SVG_BALLOON+'</span><span class="bl2">'+SVG_BALLOON+'</span>':'');   // 氣球牌：右上角有氣球（左邊小的那顆是手牌疊起來時也看得到）
   }
   return el;
 }
@@ -951,7 +963,7 @@ function renderMusicBtns(){
 function syncView(){
   view={hands:state.players.map(p=>p.hand.slice()),pile:state.discard.slice(-3),color:state.color,
         dir:state.dir,turn:state.turn,deck:state.deck.length,
-        balloon:state.balloon?state.balloon.n:0,ban:(state.ban||[]).slice()};
+        balloon:state.balloon?{n:state.balloon.n,at:state.balloon.at}:null,pending:state.pending||0};
 }
 const myTurn = () => !busy && !acting && !callPending && state && state.turn===ME && state.phase!=='over';
 
@@ -984,7 +996,7 @@ function renderOpps(){
     const off = mode==='online' && !seats[pi].bot && !Online.isOn(seats[pi].pid);
     const compact = side!=='top' && total>=5;      // 人多的時候兩側座位改成小膠囊，不畫牌背
     const kept=['pressing','hit','skipped'].filter(c=>s.classList.contains(c)).join(' ');
-    s.className='seat'+(side==='top'?'':' side')+(compact?' compact':'')+(view.turn===pi?' active':'')+(off?' off':'')+(view.ban[pi]?' banned':'')+(kept?' '+kept:'');
+    s.className='seat'+(side==='top'?'':' side')+(compact?' compact':'')+(view.turn===pi?' active':'')+(off?' off':'')+(kept?' '+kept:'');
     const rc=reactions[pi];
     const av=s.querySelector('.ava'), key = rc && rc.until>Date.now() ? 'r'+rc.face : 'a'+seats[pi].ava;
     if(av.dataset.k!==key){ av.dataset.k=key; if(key[0]==='r') av.textContent=rc.face; else av.innerHTML=avaHTML(seats[pi].ava); }
@@ -1008,14 +1020,15 @@ function renderCenter(){
     if(i===shown.length-1 && c.c<0) el.classList.add('pick'+view.color);
     pile.appendChild(el);
   });
-  const hud=$('#balloonHud'); hud.hidden=!view.balloon; $('#balloonN').textContent=view.balloon>1?'×'+view.balloon:'';
+  const ph=$('#pendHud'); ph.hidden=!view.pending; ph.textContent='+'+view.pending;      // +2／+4 疊到現在累積幾張
   const mine=myTurn(), can=mine?Engine.playable(state,ME).length:0;
-  $('#deck').classList.toggle('hintme',mine && state.phase==='play' && !can);
+  $('#deck').classList.toggle('hintme',mine && state.phase==='play' && (!can || state.pending>0));
   let whoTxt='', hint='';
   if(state.phase!=='over'){
     if(view.turn===ME){
       whoTxt='輪到你了';
-      if(mine) hint = state.phase==='drawn' ? '抽到能出的牌：點它出牌，或按「不出」'
+      if(mine) hint = state.pending>0 ? '再疊一張 +2 或 +4，不然就點抽牌堆抽 '+state.pending+' 張'
+                    : state.phase==='drawn' ? '抽到能出的牌：點它出牌，或按「不出」'
                     : can ? '點一張亮起的牌出牌' : '沒牌可出，點左上角的抽牌堆';
     } else whoTxt=seats[view.turn].name+'的回合';
   }
@@ -1066,9 +1079,17 @@ function renderMe(){
   if(av.dataset.k!==id){ av.dataset.k=id; av.innerHTML=avaHTML(id); }
   chip.querySelector('.nm').textContent=seats[ME].name;
   chip.classList.toggle('active',view.turn===ME && state.phase!=='over');
-  chip.classList.toggle('banned',!!view.ban[ME]);
 }
-function render(){ if(!view||!state) return; renderOpps(); renderCenter(); renderHand(); renderHud(); renderMe(); }
+// 氣球跟著現在要出牌的人走
+function placeBalloon(){
+  const hud=$('#balloonHud');
+  if(!view || !view.balloon || $('#table').hidden){ hud.hidden=true; return; }
+  hud.hidden=false; $('#balloonN').textContent=view.balloon.n>1?'×'+view.balloon.n:'';
+  const pi=view.balloon.at, el = pi===ME ? document.querySelector('#meChip .ava') : document.querySelector('#seat'+pi+' .ava');
+  const r=(el||$('#pile')).getBoundingClientRect(), w=hud.offsetWidth;
+  hud.style.left=(r.right-w*0.42)+'px'; hud.style.top=(r.top-w*0.6)+'px';
+}
+function render(){ if(!view||!state) return; renderOpps(); renderCenter(); renderHand(); renderHud(); renderMe(); placeBalloon(); }
 
 // ---------- 動畫小工具 ----------
 function fly(el,from,to,dur){
@@ -1128,6 +1149,7 @@ let bnSeq=0;
 // 畫面中央的大字橫幅：說明剛剛發生什麼事
 function banner(o){
   const b=$('#banner'), dur=REDUCED?700:(o.dur||950), seq=++bnSeq;
+  clearTimeout(toastTimer); $('#toast').classList.remove('show');      // 橫幅出來時把提示收掉，免得蓋住說明
   b.style.setProperty('--by',centerOf($('#piles').getBoundingClientRect()).y+'px');
   b.style.setProperty('--bd',dur+'ms'); b.style.setProperty('--bc',o.color||'#1B2A33');
   b.classList.toggle('wildbn',!!o.wild);
@@ -1324,21 +1346,24 @@ async function showEvent(e,tok,evs,i){
     if(v==='skip'){
       sfx('skip');
       await banner({ico:SVG_SKIP,big:'跳過！',sub:who(tg)+'這回合不能出牌',color:col});
-    } else if(v==='d2'){
-      sfx('d2');
-      await banner({big:'+2',num:1,sub:who(tg)+'抽 2 張，這回合不能出牌',color:col});
+    } else if(v==='d2' || v==='w4'){              // 會累積：下一家可以再疊，沒牌可疊才抽
+      const pd=evs.slice(i+1).find(x=>x.t==='pend'), k=evs.indexOf(pd), nx=evs[k+1];
+      const tg2=pd.pi, total=pd.total, forced=!!(nx && nx.t==='draw' && nx.clear);
+      sfx(v); if(v==='w4') ripple(e.color);
+      const tail = v==='w4' ? '（顏色換成'+CNAME[e.color]+'）' : '';
+      await banner({ico:v==='w4'?SVG_WILD:'',spin:v==='w4'?1:0,big:'+'+total,num:1,color:col,wild:v==='w4',dur:1050,
+        sub:(forced ? who(tg2)+'沒有牌可以擋，抽 '+total+' 張' : '輪到'+who(tg2)+'：再疊一張，或抽 '+total+' 張')+tail});
       if(tok!==token) return;
-      await shoot('+2',col,tg);
-    } else if(v==='w4'){
-      sfx('w4'); ripple(e.color);
-      await banner({ico:SVG_WILD,spin:1,big:'+4',num:1,sub:who(tg)+'抽 4 張，顏色換成'+CNAME[e.color],color:col,wild:1,dur:1000});
-      if(tok!==token) return;
-      await shoot('+4',col,tg); quake();
+      if(forced){ await shoot('+'+total,col,tg2); if(total>=4) quake(); }
     } else if(v==='wild'){
       sfx('wild'); ripple(e.color);
       await banner({ico:SVG_WILD,spin:1,big:'變色！',sub:'顏色換成'+CNAME[e.color],color:col,wild:1,dur:900});
     } else sfx('special');   // 迴轉的演出在下面的 rev 事件
+  } else if(e.t==='pend'){
+    const nx=evs[i+1];
+    if(!(nx && nx.t==='draw' && nx.clear)){ view.pending=e.total; render(); restart($('#pendHud'),'puff'); }
   } else if(e.t==='draw'){
+    if(e.clear){ view.pending=0; render(); }
     let tl=null, k=0;
     if(e.penalty){
       const pt=targetPoint(e.pi);
@@ -1363,20 +1388,17 @@ async function showEvent(e,tok,evs,i){
     sfx('joker'); quake();
     await banner({big:'鬼牌！',sub:who(e.pi)+'抽到鬼牌，直接獲勝',color:'#2A1B3D',wild:1,dur:1500});
   } else if(e.t==='balloon'){
-    view.balloon=e.n; render(); restart($('#balloonHud'),'puff');
+    view.balloon={n:e.n,at:view.balloon?view.balloon.at:e.pi}; render(); restart($('#balloonHud'),'puff');
     Music.setZone('tense'); sfx('inflate');
-    await banner(e.n===1 ? {ico:SVG_BALLOON,big:'氣球升空',sub:who(e.pi)+'丟出氣球，不知道會在誰身上爆炸',color:'#2E8FC4',dur:1100}
-                         : {ico:SVG_BALLOON,big:'氣球 ×'+e.n,sub:'又疊一顆！爆炸的人要抽 '+(2*e.n)+' 張',color:'#2E8FC4',dur:1000});
+    await banner(e.n===1 ? {ico:SVG_BALLOON,big:'氣球來了',sub:who(e.pi)+'打出氣球牌。氣球會一路往下傳，不知道在誰手上爆炸',color:'#2E8FC4',dur:1250}
+                         : {ico:SVG_BALLOON,big:'氣球 ×'+e.n,sub:'又多一顆！爆炸的人要抽 '+(2*e.n)+' 張',color:'#2E8FC4',dur:1000});
+  } else if(e.t==='bmove'){                       // 氣球傳到下一個要出牌的人手上
+    if(view.balloon){ view.balloon.at=e.pi; render(); await sleep(REDUCED?60:320); }
   } else if(e.t==='pop'){
-    const hud=$('#balloonHud'), from=centerOf(hud.hidden?pileRect():hud.getBoundingClientRect()), to=targetPoint(e.pi);
-    view.balloon=0; render();
-    const fl=fxEl('popb',to,SVG_BALLOON);
-    if(fl.animate && !REDUCED){
-      try{ await fl.animate([{transform:'translate('+(from.x-to.x)+'px,'+(from.y-to.y)+'px) scale(.8)'},{transform:'translate(0,0) scale(1.9)'}],
-        {duration:520,easing:'cubic-bezier(.5,0,.8,.6)'}).finished; }catch(err){}
-    }
-    fl.remove();
+    const to=targetPoint(e.pi);
+    restart($('#balloonHud'),'swell'); await sleep(REDUCED?80:400);
     if(tok!==token || !state) return;
+    $('#balloonHud').classList.remove('swell'); view.balloon=null; render();
     sfx('pop'); quake(); Music.setZone('game');
     const bu=fxEl('burst',to,'','#FF5A7A'); setTimeout(()=>bu.remove(),520);
     for(let k=0;k<12;k++){
@@ -1387,9 +1409,8 @@ async function showEvent(e,tok,evs,i){
       else bit.remove();
     }
     const box=seatBox(e.pi); restart(box,'hit'); setTimeout(()=>box.classList.remove('hit'),450);
-    await banner({big:'砰！',sub:who(e.pi)+'被氣球炸到：抽 '+(2*e.n)+' 張，下一回合不能出牌',color:'#E0405F',dur:1300});
-  } else if(e.t==='ban'){ view.ban[e.pi]=true; render();
-  } else if(e.t==='skip'){ if(e.ban){ view.ban[e.pi]=false; render(); } await stamp(e.pi);
+    await banner({big:'砰！',sub:who(e.pi)+'被氣球炸到：抽 '+(2*e.n+(e.extra||0))+' 張，這回合不能出牌',color:'#E0405F',dur:1300});
+  } else if(e.t==='skip'){ await stamp(e.pi);
   } else if(e.t==='uno'){ bubble(e.pi,'UNO！'); sfx('call');
   } else if(e.t==='forgot'){ sfx('bad'); toast(who(e.pi)+'忘了喊 UNO，罰抽 2 張',2200);
   } else if(e.t==='turn'){ view.turn=e.pi; render();
@@ -1607,7 +1628,7 @@ function backToRoom(){
 // ---------- 畫面切換 ----------
 function showScreen(id){
   ['menu','online','lobby','table'].forEach(s=>{ $('#'+s).hidden = s!==id; });
-  if(id==='menu'){ renderProfile(); $('#optSum').textContent=optText(cfg.opts); }
+  if(id==='menu') renderProfile();
   Music.setZone(id==='table'?gameZone():'menu');
 }
 function resetRun(){
@@ -1615,7 +1636,7 @@ function resetRun(){
   clearTimeout(driverTimer); stopClock();
   acting=false; callPending=false; callResolve=null; called=false; colorResolve=null;
   shownSeq=0; localSeq=0; resultSeq=-1;
-  ['#colorModal','#pauseModal','#resultModal','#optsModal'].forEach(q=>$(q).hidden=true);
+  ['#colorModal','#pauseModal','#resultModal'].forEach(q=>$(q).hidden=true);
   cancelPress(); closeEmoMenu(); for(const k in reactions) delete reactions[k];
   clearTimeout(toastTimer); $('#toast').classList.remove('show');
   clearFx();
@@ -1625,7 +1646,7 @@ function startLocal(keepScores){
   mode='local'; ME=0;
   seats=[{name:myName()||'你',ava:cfg.ava}].concat(BOTS.slice(0,cfg.n-1).map(b=>({name:b.name,ava:b.ava,bot:true})));
   if(!keepScores || scores.length!==cfg.n) scores=seats.map(()=>0);
-  state=Engine.newGame(cfg.n,undefined,cfg.opts);
+  state=Engine.newGame(cfg.n);                    // 和電腦玩是基本規則；加開玩法在房間裡設定
   busy=true; syncView();
   showScreen('table'); render();
   settle(); emoTip();
@@ -1638,27 +1659,20 @@ function leaveToMenu(msg){
   Online.leave(); toMenu();
   if(msg) toast(msg,2600);
 }
-// ---------- 遊戲設定（加開的玩法）----------
-const OPT_KEYS = ['joker','balloon'], OPT_NAME = {joker:'鬼牌',balloon:'氣球'};
-const inRoom = () => !!Online.code;
+// ---------- 遊戲設定（加開的玩法）：在房間大廳裡直接開關，只有房主能改 ----------
+const OPT_KEYS = ['joker','balloon'];
 function roomOpts(){ const o=Online.meta.opts||{}; return {joker:!!o.joker,balloon:!!o.balloon}; }
-function optText(o){ const on=OPT_KEYS.filter(k=>o[k]).map(k=>OPT_NAME[k]); return on.length ? '加開玩法：'+on.join('、') : '加開玩法：無'; }
 function renderOpts(){
-  const o=inRoom()?roomOpts():cfg.opts, can=!inRoom() || (Online.isHost() && Online.meta.status!=='playing');
+  const o=roomOpts(), can=Online.isHost() && Online.meta.status!=='playing';
   OPT_KEYS.forEach(k=>{ const b=$('#sw-'+k); b.setAttribute('aria-pressed',o[k]?'true':'false'); b.disabled=!can; });
-  $('#optNote').textContent = can ? (inRoom()?'改了之後，房間裡的人都會看到。':'用在「和電腦玩」，以及你開的新房間。') : '只有房主可以更改。';
-  $('#optSum').textContent=optText(cfg.opts);
-  if(inRoom()) $('#lbOptSum').textContent=optText(roomOpts());
 }
 function toggleOpt(k){
-  if(inRoom()){
-    if(!Online.isHost() || Online.meta.status==='playing') return;
-    const o=roomOpts(); o[k]=!o[k]; Online.meta.opts=o;
-    try{ Online.ref('meta/opts').set(o); }catch(e){}
-  } else { cfg.opts[k]=!cfg.opts[k]; saveCfg(); }
+  if(!Online.code || !Online.isHost() || Online.meta.status==='playing') return;
+  const o=roomOpts(); o[k]=!o[k]; Online.meta.opts=o;
+  cfg.opts[k]=o[k]; saveCfg();                    // 記住房主上次的選擇，下次開房間直接帶入
+  try{ Online.ref('meta/opts').set(o); }catch(e){}
   sfx('draw'); renderOpts();
 }
-function openOpts(){ renderOpts(); $('#optsModal').hidden=false; }
 
 // 主選單右邊：自訂名字和形象
 function renderProfile(){
@@ -1832,14 +1846,13 @@ function onPlayers(){
   }
 }
 function onMeta(){
-  if(!$('#optsModal').hidden) renderOpts();
   if(!$('#lobby').hidden) renderLobby();
   else if(mode==='online' && !$('#resultModal').hidden) renderResultBtns();
 }
 function renderLobby(){
   const list=Online.sorted(), on=list.filter(p=>Online.isOn(p.pid)), host=Online.isHost();
   $('#lbCode').textContent=Online.code;
-  $('#lbOptSum').textContent=optText(roomOpts());
+  renderOpts();
   $('#lbLink').textContent=inviteUrl();
   const box=$('#lbPlayers'); box.innerHTML='';
   let k=0;
@@ -1935,11 +1948,7 @@ function init(){
     olBusy=false;
   });
   bindEmotes();
-  $('#optBtn').addEventListener('click',openOpts);
-  $('#lbOptBtn').addEventListener('click',openOpts);
-  $('#optClose').addEventListener('click',()=>{ $('#optsModal').hidden=true; });
   OPT_KEYS.forEach(k=>$('#sw-'+k).addEventListener('click',()=>toggleOpt(k)));
-  $('#optSum').textContent=optText(cfg.opts);
   $('#deck').addEventListener('click',onDeck);
   $('#passBtn').addEventListener('click',onPass);
   $('#unoBtn').addEventListener('click',onUno);
@@ -1963,7 +1972,7 @@ function init(){
   $('#againBtn').addEventListener('click',()=>{ if(mode==='online'){ if(Online.amDriver()) Online.again(); } else startLocal(true); });
   $('#menuBtn').addEventListener('click',()=>{ if(mode==='online') leaveToMenu(); else toMenu(); });
   $('#roomBtn').addEventListener('click',backToRoom);
-  window.addEventListener('resize',()=>{ if(view && state) layoutHand(); });
+  window.addEventListener('resize',()=>{ if(view && state){ layoutHand(); placeBalloon(); } });
   document.addEventListener('gesturestart',e=>e.preventDefault());
   $('#nVal').textContent=cfg.n+' 人';
   setSound(cfg.sound);
