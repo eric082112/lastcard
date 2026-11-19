@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="最後一張！">
 <meta name="theme-color" content="#0B1D24">
-<meta name="lc-build" content="11">
+<meta name="lc-build" content="12">
 <link rel="apple-touch-icon" sizes="180x180" href="icon-180-5e34f975.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192-e4b190bb.png">
 <meta property="og:title" content="最後一張！">
@@ -329,6 +329,21 @@ input:focus{outline:3px solid var(--c1)}
 .res .rava{width:26px;height:26px;border-radius:50%;overflow:hidden;display:block}
 .res .rava svg{width:100%;height:100%;display:block}
 .avimg{display:grid;place-items:center;width:100%;height:100%}
+/* ---------- 5、6 人的座位 ---------- */
+#slotL,#slotR{flex-direction:column;gap:8px}
+#slotTop{gap:12px}
+.seat.compact{flex-direction:row;border-radius:999px;padding:4px 12px 4px 5px;gap:7px;text-align:left}
+.seat.compact .mini{display:none}
+.seat.compact .ava{width:calc(var(--mh)*.92);height:calc(var(--mh)*.92)}
+.seat.compact .nm{max-width:4.6em}
+#table{grid-template-columns:minmax(0,1fr)}
+#table.n5 #slotTop{gap:min(14vw,200px)}
+#table.n5 #topRow{padding-left:122px;padding-right:122px}
+#table.n5 #slotL,#table.n5 #slotR{align-self:end;padding-bottom:4px}
+#table.n6 #slotL,#table.n6 #slotR{gap:min(5vh,18px)}
+#lbPlayers{grid-template-columns:1fr 1fr}
+.prow{min-width:0}
+.prow span:first-of-type{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .avimg img{width:90%;height:90%;object-fit:contain;display:block;pointer-events:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-user-drag:none}
 .card .cap{position:absolute;left:0;right:0;bottom:15%;text-align:center;font-size:calc(var(--h)*.115);letter-spacing:.12em;text-shadow:0 calc(var(--h)*.012) 0 rgba(0,0,0,.25)}
 .card.isall .big svg{transform:translateY(-12%);width:calc(var(--h)*.44);height:calc(var(--h)*.44)}
@@ -369,7 +384,7 @@ input:focus{outline:3px solid var(--c1)}
         <input id="myName" maxlength="8" placeholder="你的名字" aria-label="你的名字" autocomplete="off" autocapitalize="off" spellcheck="false">
       </div>
     </div>
-    <div id="ver">第 11 版</div>
+    <div id="ver">第 12 版</div>
     <div id="menuTop"><button class="ico musicBtn" aria-label="背景音樂開關"></button></div>
     <button id="creditBtn">音樂出處</button>
   </section>
@@ -712,7 +727,8 @@ function avaHTML(id){
   return '<span class="avimg" style="background:'+art.bg+'"><img class="avpic" data-id="'+id+'" src="'+art.img+'" alt="" draggable="false"></span>';
 }
 const myName = () => (store.get('lastcard-name')||'').trim().slice(0,8);
-const BOTS = [{name:'小狐',ava:'fox'},{name:'胖達',ava:'panda'},{name:'呱呱',ava:'frog'}];
+const BOTS = [{name:'小狐',ava:'fox'},{name:'胖達',ava:'panda'},{name:'呱呱',ava:'frog'},{name:'熊熊',ava:'bear'},{name:'企企',ava:'penguin'}];
+const MAXP = 6;             // 最多幾個人一起玩
 const REDUCED = window.matchMedia && matchMedia('(prefers-reduced-motion:reduce)').matches;
 const TURN_MS = 30000;      // 連線時每回合的思考時間
 const CALL_MS = 2600;       // 出到剩一張後，可以補喊 UNO 的時間
@@ -722,7 +738,7 @@ const store = {
   set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
 };
 const cfg = {n:4, sound:true, music:true, ava:'pig'};
-try{ const saved=JSON.parse(store.get('lastcard-cfg')||'null'); if(saved){ cfg.n=saved.n>=2&&saved.n<=4?saved.n:4; cfg.sound=saved.sound!==false; cfg.music=saved.music!==false; if(saved.ava) cfg.ava=saved.ava; } }catch(e){}
+try{ const saved=JSON.parse(store.get('lastcard-cfg')||'null'); if(saved){ cfg.n=saved.n>=2&&saved.n<=6?saved.n:4; cfg.sound=saved.sound!==false; cfg.music=saved.music!==false; if(saved.ava) cfg.ava=saved.ava; } }catch(e){}
 function saveCfg(){ store.set('lastcard-cfg',JSON.stringify(cfg)); }
 
 let mode='local';           // 'local' 單機 / 'online' 連線
@@ -844,33 +860,42 @@ function syncView(){
 }
 const myTurn = () => !busy && !acting && !callPending && state && state.turn===ME && state.phase!=='over';
 
-// 座位：自己永遠在下方，其他人依順時針坐左、上、右
-function seatPos(pi,n){
-  const rel=((pi-ME)%n+n)%n;
-  return (n===4?['bottom','left','top','right']:n===3?['bottom','left','right']:['bottom','top'])[rel];
-}
+// 座位：自己永遠在最下面，其他人依順時針排。5 人是五角形，6 人是六角形
+const SEAT_POS = {
+  2:['bottom','top'],
+  3:['bottom','left','right'],
+  4:['bottom','left','top','right'],
+  5:['bottom','left','topL','topR','right'],                 // 五角形：左右兩位偏下，上面兩位
+  6:['bottom','leftB','leftT','top','rightT','rightB']       // 六角形：左右各兩位上下排，上面一位
+};
+const POS_ORDER = {topL:0,topR:1,leftT:0,leftB:1,rightT:0,rightB:1};
+function seatPos(pi,n){ return SEAT_POS[n][((pi-ME)%n+n)%n]; }
+const posSide = pos => pos==='bottom' ? 'bottom' : pos[0]==='t' ? 'top' : pos[0]==='l' ? 'left' : 'right';
 function renderOpps(){
   const slots={top:$('#slotTop'),left:$('#slotL'),right:$('#slotR')};
   const total=view.hands.length, keep={};
+  const t=$('#table'); t.classList.toggle('n5',total===5); t.classList.toggle('n6',total===6);
   for(let pi=0;pi<total;pi++){
     if(pi===ME) continue;
-    const n=view.hands[pi].length, pos=seatPos(pi,total);
+    const n=view.hands[pi].length, pos=seatPos(pi,total), side=posSide(pos);
     let s=$('#seat'+pi);
-    if(!s || s.parentNode!==slots[pos]){          // 座位元素會留著重複使用，長按才不會被打斷
+    if(!s || s.parentNode!==slots[side]){          // 座位元素會留著重複使用，長按才不會被打斷
       if(s) s.remove();
       s=document.createElement('div'); s.id='seat'+pi; s.dataset.pi=pi;
       s.innerHTML='<div class="ava"></div><div class="meta"><div class="nm"></div><div class="cnt"></div></div><div class="mini"></div>';
-      slots[pos].appendChild(s);
+      slots[side].appendChild(s);
     }
-    keep[s.id]=1;
+    keep[s.id]=1; s.dataset.pos=pos; s.style.order=POS_ORDER[pos]||0;
     const off = mode==='online' && !seats[pi].bot && !Online.isOn(seats[pi].pid);
-    s.className='seat'+(pos==='top'?'':' side')+(view.turn===pi?' active':'')+(off?' off':'')+(s.classList.contains('pressing')?' pressing':'');
+    const compact = side!=='top' && total>=5;      // 人多的時候兩側座位改成小膠囊，不畫牌背
+    const kept=['pressing','hit','skipped'].filter(c=>s.classList.contains(c)).join(' ');
+    s.className='seat'+(side==='top'?'':' side')+(compact?' compact':'')+(view.turn===pi?' active':'')+(off?' off':'')+(kept?' '+kept:'');
     const rc=reactions[pi];
     const av=s.querySelector('.ava'), key = rc && rc.until>Date.now() ? 'r'+rc.face : 'a'+seats[pi].ava;
     if(av.dataset.k!==key){ av.dataset.k=key; if(key[0]==='r') av.textContent=rc.face; else av.innerHTML=avaHTML(seats[pi].ava); }
     s.querySelector('.nm').textContent=seats[pi].name;
     s.querySelector('.cnt').textContent=n+' 張'+(off?'・離線':'');
-    const m=s.querySelector('.mini'), want=Math.min(n,pos==='top'?8:6);
+    const m=s.querySelector('.mini'), want = compact ? 0 : Math.min(n, side==='top' ? (total===5?3:8) : 6);
     while(m.children.length>want) m.lastChild.remove();
     while(m.children.length<want) m.appendChild(backEl());
   }
@@ -965,7 +990,9 @@ function cardRect(r,h){ const w=h*0.68; return {left:r.left+r.width/2-w/2,top:r.
 function seatRect(pi){
   if(pi===ME){ const r=$('#hand').getBoundingClientRect(), h=$('#pile').offsetHeight;
     return cardRect({left:r.left,top:r.bottom-h,width:r.width,height:h},h); }
-  const m=document.querySelector('#seat'+pi+' .mini'); if(!m) return pileRect();
+  let m=document.querySelector('#seat'+pi+' .mini');
+  if(m && !m.offsetWidth) m=document.querySelector('#seat'+pi+' .ava');     // 小膠囊座位沒有牌背，從頭像飛出去
+  if(!m) return pileRect();
   const r=m.getBoundingClientRect(); return cardRect(r,r.height);
 }
 const pileRect = () => $('#pile').getBoundingClientRect();
@@ -992,10 +1019,7 @@ function targetPoint(pi){
   if(pi===ME){ const r=$('#hand').getBoundingClientRect(); return {x:r.left+r.width/2,y:r.top+r.height*0.45}; }
   const s=$('#seat'+pi); return centerOf(s?s.getBoundingClientRect():pileRect());
 }
-function seatBox(pi){
-  const pos=seatPos(pi,state.players.length);
-  return $(pos==='bottom'?'#handWrap':pos==='top'?'#slotTop':pos==='left'?'#slotL':'#slotR');
-}
+function seatBox(pi){ return (pi===ME ? $('#handWrap') : $('#seat'+pi)) || $('#handWrap'); }
 function fxEl(cls,pt,html,color){
   const el=document.createElement('div'); el.className=cls;
   if(html) el.innerHTML=html; if(color) el.style.setProperty('--sc',color);
@@ -1055,7 +1079,7 @@ function orbit(dir,color){
 function clearFx(){
   bnSeq++; $('#fx').innerHTML='';
   ['#banner','#ripple','#orbit'].forEach(q=>$(q).classList.remove('go'));
-  ['#handWrap','#slotTop','#slotL','#slotR'].forEach(q=>$(q).classList.remove('skipped','hit'));
+  document.querySelectorAll('#handWrap,.seat').forEach(el=>el.classList.remove('skipped','hit'));
   $('#table').classList.remove('quake');
 }
 
@@ -1077,7 +1101,7 @@ function cancelPress(){
 function openEmoMenu(pi){
   const s=$('#seat'+pi), m=$('#emoMenu'); if(!s || !state) return;
   m.dataset.pi=pi; m.hidden=false;
-  const r=s.getBoundingClientRect(), w=m.offsetWidth, h=m.offsetHeight, pos=seatPos(pi,state.players.length);
+  const r=s.getBoundingClientRect(), w=m.offsetWidth, h=m.offsetHeight, pos=posSide(seatPos(pi,state.players.length));
   let x,y;
   if(pos==='left'){ x=r.right+10; y=r.top+r.height/2-h/2; }
   else if(pos==='right'){ x=r.left-10-w; y=r.top+r.height/2-h/2; }
@@ -1498,7 +1522,7 @@ function stepAvatar(d){
   renderProfile(); restart($('#avBig'),'bop');
 }
 function setN(n){
-  cfg.n=Math.max(2,Math.min(4,n)); $('#nVal').textContent=cfg.n+' 人'; saveCfg();
+  cfg.n=Math.max(2,Math.min(MAXP,n)); $('#nVal').textContent=cfg.n+' 人'; saveCfg();
 }
 function setSound(on){ cfg.sound=on; $('#soundBtn').innerHTML=on?SVG_SOUND_ON:SVG_SOUND_OFF; saveCfg(); }
 
@@ -1558,7 +1582,7 @@ const Online = {
     if(room.meta.status==='playing'){
       let ok=false; try{ ok=JSON.parse(room.game.json).seats.some(s=>s.pid===this.pid); }catch(e){}
       if(!ok){ this.code=''; throw new UserErr('這個房間的遊戲已經開始了'); }
-    } else if(!players[this.pid] && Object.keys(players).filter(k=>players[k].online).length>=4){
+    } else if(!players[this.pid] && Object.keys(players).filter(k=>players[k].online).length>=MAXP){
       this.code=''; throw new UserErr('這個房間已經滿了');
     }
     return this.attach();
@@ -1596,8 +1620,8 @@ const Online = {
     try{ history.replaceState(null,'',location.pathname); }catch(e){}
   },
   async start(){
-    const humans=this.sorted().filter(p=>this.isOn(p.pid)).slice(0,4);
-    const total=Math.max(2,Math.min(4,Math.max(this.total,humans.length)));
+    const humans=this.sorted().filter(p=>this.isOn(p.pid)).slice(0,MAXP);
+    const total=Math.max(2,Math.min(MAXP,Math.max(this.total,humans.length)));
     const sts=humans.map((p,i)=>({pid:p.pid,name:p.name,ava:AVATARS[p.ava]?p.ava:AV_IDS[i]}));
     for(let b=0;sts.length<total;b++) sts.push({bot:true,name:BOTS[b].name,ava:BOTS[b].ava});
     const prev=(await withTimeout(this.ref('game/seq').once('value'))).val()||0;
@@ -1673,9 +1697,9 @@ function renderLobby(){
       '</span><span class="tag">'+tag+'</span>';
     box.appendChild(row);
   });
-  for(let i=list.length;i<4;i++){ const row=document.createElement('div'); row.className='prow empty'; row.textContent='等朋友加入…'; box.appendChild(row); }
-  const min=Math.max(2,Math.min(4,on.length));
-  Online.total=Math.max(min,Math.min(4,Online.total));
+  for(let i=list.length;i<MAXP;i++){ const row=document.createElement('div'); row.className='prow empty'; row.textContent='等朋友加入…'; box.appendChild(row); }
+  const min=Math.max(2,Math.min(MAXP,on.length));
+  Online.total=Math.max(min,Math.min(MAXP,Online.total));
   $('#tVal').textContent=Online.total+' 人';
   const playing=Online.meta.status==='playing';
   $('#lbHost').hidden=!host || playing;
