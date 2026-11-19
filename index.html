@@ -8,7 +8,13 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="最後一張！">
 <meta name="theme-color" content="#0B1D24">
-<meta name="lc-build" content="10">
+<meta name="lc-build" content="11">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180-5e34f975.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192-e4b190bb.png">
+<meta property="og:title" content="最後一張！">
+<meta property="og:description" content="點連結就能一起玩的卡牌遊戲">
+<meta property="og:image" content="https://eric082112.github.io/lastcard/icon-512-60610de0.png">
+<meta property="og:type" content="website">
 <title>最後一張！</title>
 <style>
 :root{
@@ -363,7 +369,7 @@ input:focus{outline:3px solid var(--c1)}
         <input id="myName" maxlength="8" placeholder="你的名字" aria-label="你的名字" autocomplete="off" autocapitalize="off" spellcheck="false">
       </div>
     </div>
-    <div id="ver">第 10 版</div>
+    <div id="ver">第 11 版</div>
     <div id="menuTop"><button class="ico musicBtn" aria-label="背景音樂開關"></button></div>
     <button id="creditBtn">音樂出處</button>
   </section>
@@ -1013,7 +1019,7 @@ function banner(o){
 }
 // 效果從棄牌堆飛向被影響的玩家
 async function shoot(html,color,pi){
-  const from=centerOf(pileRect()), to=targetPoint(pi), el=fxEl('shot',to,html,color);
+  const tok=token, from=centerOf(pileRect()), to=targetPoint(pi), el=fxEl('shot',to,html,color);
   const dx=from.x-to.x, dy=from.y-to.y;
   if(el.animate && !REDUCED){
     const a=el.animate([{transform:'translate('+dx+'px,'+dy+'px) scale(.5)'},
@@ -1022,6 +1028,7 @@ async function shoot(html,color,pi){
     try{ await a.finished; }catch(e){}
   }
   el.remove();
+  if(tok!==token || !state) return;               // 動畫播到一半就離開牌桌了
   const b=fxEl('burst',to,'',color); setTimeout(()=>b.remove(),520);
   const box=seatBox(pi); restart(box,'hit'); setTimeout(()=>box.classList.remove('hit'),450);
   sfx('hit');
