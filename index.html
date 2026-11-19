@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="最後一張！">
 <meta name="theme-color" content="#0B1D24">
-<meta name="lc-build" content="14">
+<meta name="lc-build" content="15">
 <link rel="apple-touch-icon" sizes="180x180" href="icon-180-5e34f975.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192-e4b190bb.png">
 <meta property="og:title" content="最後一張！">
@@ -417,7 +417,7 @@ input:focus{outline:3px solid var(--c1)}
         <input id="myName" maxlength="8" placeholder="你的名字" aria-label="你的名字" autocomplete="off" autocapitalize="off" spellcheck="false">
       </div>
     </div>
-    <div id="ver">第 14 版</div>
+    <div id="ver">第 15 版</div>
     <div id="menuTop"><button class="ico musicBtn" aria-label="背景音樂開關"></button></div>
     <button id="creditBtn">音樂出處</button>
   </section>
@@ -554,8 +554,8 @@ const Engine = (() => {
   const isDraw = c => c.v==='d2' || c.v==='w4';
   // 加開的玩法（房主在大廳開關）
   //   鬼牌：抽牌時有 1% 機率抽到，不在 124 張裡，打出去直接獲勝
-  //   氣球：數字牌離開牌堆時有 5% 機率右上角帶著氣球（card.b）
-  const JOKER_P = 0.01, BALLOON_P = 0.05;
+  //   氣球：數字牌離開牌堆時有 10% 機率右上角帶著氣球（card.b）
+  const JOKER_P = 0.01, BALLOON_P = 0.10;
   function mark(s,c){
     if(c && isNum(c)){ if(s.opts && s.opts.balloon && s.rng()<BALLOON_P) c.b=1; else delete c.b; }
     return c;
@@ -653,7 +653,7 @@ const Engine = (() => {
     if(!hand.length){ s.phase='over'; s.winner=pi; ev.push({t:'win',pi}); return ev; }
     if(card.b && isNum(card)){                    // 帶氣球的數字牌：場上出現氣球，或是再疊一顆
       if(s.balloon) s.balloon.n++;
-      else s.balloon={n:1,left:3+Math.floor(s.rng()*13),at:pi};   // 傳 3 到 15 次後爆炸
+      else s.balloon={n:1,left:4+Math.floor(s.rng()*7),at:pi};    // 傳 4 到 10 次後爆炸
       ev.push({t:'balloon',pi,n:s.balloon.n});
     }
     const n=s.players.length;
