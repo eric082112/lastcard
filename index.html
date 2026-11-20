@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="最後一張！">
 <meta name="theme-color" content="#0B1D24">
-<meta name="lc-build" content="15">
+<meta name="lc-build" content="16">
 <link rel="apple-touch-icon" sizes="180x180" href="icon-180-5e34f975.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192-e4b190bb.png">
 <meta property="og:title" content="最後一張！">
@@ -385,11 +385,48 @@ input:focus{outline:3px solid var(--c1)}
 #deck.shuf{animation:shuf .5s ease-in-out}
 @keyframes shuf{25%{transform:rotate(-7deg)}50%{transform:rotate(6deg)}75%{transform:rotate(-4deg)}}
 #topRow{padding-left:150px;padding-right:150px}
+/* ---------- 桌面顏色 ---------- */
+#felt,#felt2{position:absolute;inset:0;pointer-events:none;opacity:0;
+  background:radial-gradient(ellipse at 50% 46%,var(--f1),var(--f2) 58%,var(--f3) 125%)}
+#table.tinted #ring ellipse{stroke:var(--cream)}
+#table.tinted #ring .heads{fill:var(--cream)}
+/* ---------- 出完最後一張的慶祝 ---------- */
+#winFx{position:fixed;inset:0;z-index:58;pointer-events:none;display:grid;place-items:center;overflow:hidden}
+#winFx::before{content:"";position:absolute;inset:0;opacity:0;
+  background:radial-gradient(ellipse at 50% 46%,rgba(6,16,21,.55),rgba(6,16,21,.9))}
+#winFx.go::before{animation:wfade .28s ease-out forwards}
+#winFx.out{animation:wout .23s ease-in forwards}
+#winFx .rays{position:absolute;left:var(--wx,50%);top:var(--wy,40%);width:170vmax;height:170vmax;margin:-85vmax 0 0 -85vmax;border-radius:50%;opacity:0;
+  background:repeating-conic-gradient(var(--c0) 0 7.5deg,transparent 0 15deg,var(--c1) 0 22.5deg,transparent 0 30deg,
+    var(--c2) 0 37.5deg,transparent 0 45deg,var(--c3) 0 52.5deg,transparent 0 60deg);
+  -webkit-mask-image:radial-gradient(circle,#000 0,rgba(0,0,0,.45) 13%,transparent 31%);
+  mask-image:radial-gradient(circle,#000 0,rgba(0,0,0,.45) 13%,transparent 31%)}
+#winFx.go .rays{animation:wrays .7s cubic-bezier(.2,.9,.3,1) .3s forwards,wspin 16s linear infinite}
+#winFx .wstack{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center}
+#winFx .wava{--mh:min(38vh,150px);border:calc(var(--mh)*.045) solid var(--cream);box-shadow:0 8px 0 rgba(0,0,0,.3);overflow:hidden}
+#winFx .wbig{margin-top:2.2vh;font-weight:900;font-size:clamp(34px,16vh,76px);line-height:1.05;letter-spacing:.02em;white-space:nowrap;
+  text-shadow:.045em 0 0 var(--ink),-.045em 0 0 var(--ink),0 .045em 0 var(--ink),0 -.045em 0 var(--ink),
+    .032em .032em 0 var(--ink),-.032em .032em 0 var(--ink),.032em -.032em 0 var(--ink),-.032em -.032em 0 var(--ink),0 .11em 0 rgba(0,0,0,.45)}
+#winFx .wbig span{display:inline-block;opacity:0}
+#winFx .wbig span:nth-child(1){color:var(--c0)} #winFx .wbig span:nth-child(2){color:var(--c1)}
+#winFx .wbig span:nth-child(3){color:var(--c2)} #winFx .wbig span:nth-child(4){color:var(--c3)}
+#winFx.go .wbig span{animation:wdrop .5s cubic-bezier(.2,1.5,.4,1) calc(.38s + var(--k)*75ms) forwards}
+#winFx .wsub{margin-top:1.4vh;font-weight:800;font-size:clamp(13px,4.6vh,20px);opacity:0;white-space:nowrap;text-shadow:0 2px 0 rgba(0,0,0,.4)}
+#winFx.go .wsub{animation:wfade .35s ease-out .95s forwards}
+#winFx .conf i{position:absolute;border-radius:2px;opacity:0;will-change:transform}
+@keyframes wfade{to{opacity:1}}
+@keyframes wout{to{opacity:0}}
+@keyframes wrays{from{opacity:0;scale:.3}to{opacity:.42;scale:1}}
+@keyframes wspin{to{rotate:360deg}}
+@keyframes wdrop{from{opacity:0;transform:translateY(-70%) scale(.4)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){#winFx.go::before,#winFx.go .wbig span,#winFx.go .wsub{animation:none;opacity:1}
+  #winFx.go .rays{animation:none;opacity:.35}}
 #ver{position:absolute;left:calc(env(safe-area-inset-left) + 12px);bottom:calc(env(safe-area-inset-bottom) + 8px);font-size:11px;opacity:.55}
 </style>
 </head>
 <body>
 <div id="app">
+  <div id="felt"></div><div id="felt2"></div>
 
   <section id="menu" class="screen">
     <div class="menu-l">
@@ -417,7 +454,7 @@ input:focus{outline:3px solid var(--c1)}
         <input id="myName" maxlength="8" placeholder="你的名字" aria-label="你的名字" autocomplete="off" autocapitalize="off" spellcheck="false">
       </div>
     </div>
-    <div id="ver">第 15 版</div>
+    <div id="ver">第 16 版</div>
     <div id="menuTop"><button class="ico musicBtn" aria-label="背景音樂開關"></button></div>
     <button id="creditBtn">音樂出處</button>
   </section>
@@ -513,7 +550,7 @@ input:focus{outline:3px solid var(--c1)}
   <div id="emoMenu" hidden><button data-k="egg" aria-label="丟雞蛋">🥚</button><button data-k="poo" aria-label="丟大便">💩</button></div>
   <div id="balloonHud" hidden><svg viewBox="0 0 100 100"><ellipse cx="50" cy="40" rx="27" ry="32" fill="#FF5A7A"/><path d="M44 70h12l-6 9z" fill="#E0405F"/><path d="M50 79q-7 8 0 15" fill="none" stroke="#FFF8EA" stroke-width="3" stroke-linecap="round"/><ellipse cx="40" cy="27" rx="6" ry="9" fill="#fff" opacity=".5"/></svg><b id="balloonN"></b></div>
   <div id="fx"></div>
-  <div id="ripple"></div>
+  <div id="winFx" hidden><div class="rays"></div><div class="conf"></div><div class="wstack"><span class="ava wava"></span><div class="wbig"></div><div class="wsub"></div></div></div>
   <svg id="orbit" aria-hidden="true"><ellipse/></svg>
   <div id="banner"><div class="strip"></div><div class="txt"><span class="bico"></span><div><div class="bbig"></div><div class="bsub"></div></div></div></div>
   <div id="toast"></div>
@@ -555,7 +592,7 @@ const Engine = (() => {
   // 加開的玩法（房主在大廳開關）
   //   鬼牌：抽牌時有 1% 機率抽到，不在 124 張裡，打出去直接獲勝
   //   氣球：數字牌離開牌堆時有 10% 機率右上角帶著氣球（card.b）
-  const JOKER_P = 0.01, BALLOON_P = 0.10;
+  const JOKER_P = 0.005, BALLOON_P = 0.10;
   function mark(s,c){
     if(c && isNum(c)){ if(s.opts && s.opts.balloon && s.rng()<BALLOON_P) c.b=1; else delete c.b; }
     return c;
@@ -564,10 +601,11 @@ const Engine = (() => {
     rng = rng||Math.random;
     const deck=shuffle(makeDeck(),rng);
     // discard 只留桌面上看得到的最上面 3 張；更早出過的牌放進 used，等於壓在牌堆最底下
+    // tint：這一局有沒有人出過變色牌或 +4（出過之後桌面才跟著顏色走）
     // pending：+2／+4 疊加到現在累積要抽幾張。balloon：{n 幾顆, left 還要傳幾次, at 在誰手上}
     const s={players:Array.from({length:n},()=>({hand:[]})),deck,used:[],discard:[],color:0,dir:1,
              turn:Math.floor(rng()*n),phase:'play',drawnId:null,winner:-1,rng,
-             opts:{joker:!!(opts&&opts.joker),balloon:!!(opts&&opts.balloon)},nextId:1000,balloon:null,pending:0};
+             opts:{joker:!!(opts&&opts.joker),balloon:!!(opts&&opts.balloon)},nextId:1000,balloon:null,pending:0,tint:false};
     for(let k=0;k<7;k++) for(const p of s.players) p.hand.push(mark(s,deck.pop()));   // 開局不會發到鬼牌
     let i=deck.length-1; while(!isNum(deck[i])) i--;      // 起始牌一定是數字牌
     const first=deck.splice(i,1)[0]; delete first.b;
@@ -595,8 +633,10 @@ const Engine = (() => {
     while(s.discard.length>3) s.used.push(s.discard.shift());
     recycle(s,ev,false);
   }
+  const hasJoker = s => s.players.some(p=>p.hand.some(c=>c.v==='joker'));
   function take(s,ev){
-    if(s.opts && s.opts.joker && s.rng()<JOKER_P) return {id:s.nextId++,c:-2,v:'joker'};
+    // 鬼牌全場只會有一張：已經有人拿著，就不會再抽到第二張
+    if(s.opts && s.opts.joker && !hasJoker(s) && s.rng()<JOKER_P) return {id:s.nextId++,c:-2,v:'joker'};
     if(!s.deck.length) recycle(s,ev,true);       // 上面的牌抽完了，底下還沒洗的先洗
     return s.deck.length ? mark(s,s.deck.pop()) : null;
   }
@@ -648,6 +688,7 @@ const Engine = (() => {
     }
     s.discard.push(card);
     s.color = card.c===-1 ? color : card.c;
+    if(card.c===-1) s.tint=true;
     ev.push({t:'play',pi,card,color:s.color,extra});
     settlePile(s,ev);
     if(!hand.length){ s.phase='over'; s.winner=pi; ev.push({t:'win',pi}); return ev; }
@@ -963,7 +1004,8 @@ function renderMusicBtns(){
 function syncView(){
   view={hands:state.players.map(p=>p.hand.slice()),pile:state.discard.slice(-3),color:state.color,
         dir:state.dir,turn:state.turn,deck:state.deck.length,
-        balloon:state.balloon?{n:state.balloon.n,at:state.balloon.at}:null,pending:state.pending||0};
+        balloon:state.balloon?{n:state.balloon.n,at:state.balloon.at}:null,pending:state.pending||0,
+        felt:state.tint?state.color:-1};      // felt：桌面現在是什麼顏色（-1 是原本的深色）
 }
 const myTurn = () => !busy && !acting && !callPending && state && state.turn===ME && state.phase!=='over';
 
@@ -1011,6 +1053,7 @@ function renderOpps(){
 function renderCenter(){
   const t=$('#table');
   t.style.setProperty('--cur',HEX[view.color]);
+  t.classList.toggle('tinted',view.felt>=0); feltTo(view.felt,0);
   t.classList.toggle('ccw',view.dir===-1);
   const pile=$('#pile'); pile.innerHTML='';
   const shown=view.pile.slice(-3);
@@ -1183,10 +1226,33 @@ async function stamp(pi){
   setTimeout(()=>{ el.remove(); box.classList.remove('skipped'); },950);
   await sleep(REDUCED?250:720);
 }
-function ripple(ci){
-  const r=$('#ripple'), c=centerOf(pileRect());
-  r.style.setProperty('--rc',HEX[ci]); r.style.setProperty('--rx',c.x+'px'); r.style.setProperty('--ry',c.y+'px');
-  restart(r,'go');
+// 桌面顏色：有人出過變色牌或 +4 之後，桌面跟著目前的顏色走。新顏色從棄牌堆往外暈開到整張桌面
+const FELT = [['#D54C53','#A6323B','#451219'],['#DB9A12','#AC7603','#473100'],['#17B08B','#0C8064','#05362A'],['#735DE0','#4C38AF','#1E144E']];   // 比牌面深一點，牌才跳得出來
+let feltNow=-1, feltSeq=0;
+function feltPaint(el,ci){ FELT[ci].forEach((c,k)=>el.style.setProperty('--f'+(k+1),c)); }
+function feltTo(ci,ms){
+  if(ci===feltNow) return;
+  const base=$('#felt'), top=$('#felt2'), seq=++feltSeq, prev=feltNow;
+  const setMask = m => { top.style.webkitMaskImage=m; top.style.maskImage=m; };
+  feltNow=ci;
+  if(prev>=0){ feltPaint(base,prev); base.style.opacity=1; }     // 上一次還沒暈完的話，先定在上一個顏色
+  top.style.opacity=0; setMask('none');
+  if(ci<0){ base.style.opacity=0; return; }
+  if(!ms || REDUCED){ feltPaint(base,ci); base.style.opacity=1; return; }
+  feltPaint(top,ci);
+  const c=centerOf(pileRect()), W=innerWidth, H=innerHeight;
+  const R=Math.hypot(Math.max(c.x,W-c.x),Math.max(c.y,H-c.y)), t0=performance.now();
+  const done=()=>{ if(seq!==feltSeq) return; feltPaint(base,ci); base.style.opacity=1; top.style.opacity=0; setMask('none'); };
+  const frame=now=>{
+    if(seq!==feltSeq) return;
+    const t=Math.min(1,Math.max(0,(now-t0)/ms)), k=t<.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2;     // 慢慢起步、慢慢收尾
+    const soft=36+k*R*.4, r=k*(R+soft);                          // 邊緣是柔的，越往外越柔
+    setMask('radial-gradient(circle at '+c.x+'px '+c.y+'px,#000 '+Math.max(0,r-soft)+'px,transparent '+r+'px)');
+    top.style.opacity=1;
+    if(t<1) requestAnimationFrame(frame); else done();
+  };
+  requestAnimationFrame(frame);
+  setTimeout(done,ms+500);                                       // 分頁在背景時動畫不會跑，時間到直接換好
 }
 function orbit(dir,color){
   const o=$('#orbit'), W=innerWidth, H=innerHeight, e=o.querySelector('ellipse');
@@ -1197,7 +1263,8 @@ function orbit(dir,color){
 }
 function clearFx(){
   bnSeq++; $('#fx').innerHTML='';
-  ['#banner','#ripple','#orbit'].forEach(q=>$(q).classList.remove('go'));
+  ['#banner','#orbit'].forEach(q=>$(q).classList.remove('go'));
+  const wf=$('#winFx'); wf.hidden=true; wf.classList.remove('go','out'); wf.querySelector('.conf').innerHTML='';
   document.querySelectorAll('#handWrap,.seat').forEach(el=>el.classList.remove('skipped','hit'));
   $('#table').classList.remove('quake');
 }
@@ -1311,6 +1378,45 @@ function emoTip(){
   const tok=token; setTimeout(()=>{ if(tok===token && state) toast('長按其他玩家的頭像，可以丟雞蛋或大便',3600); },1400);
 }
 
+// ---------- 出完最後一張：全畫面慶祝，播完才進結算 ----------
+async function celebrate(pi,tok,joker){       // 連線時事件播完才換成新狀態，所以是不是鬼牌要從事件判斷
+  const w=$('#winFx'), av=w.querySelector('.wava'), conf=w.querySelector('.conf');
+  w.querySelector('.wbig').innerHTML=Array.from(joker?'鬼牌獲勝！':'最後一張！').map((ch,k)=>'<span style="--k:'+k+'">'+ch+'</span>').join('');
+  w.querySelector('.wsub').textContent=(pi===ME?'你':seats[pi].name)+(joker?'抽到鬼牌，這一局直接獲勝':'把手牌出完了，這一局獲勝');
+  av.innerHTML=avaHTML(seats[pi].ava); conf.innerHTML='';
+  clearTimeout(toastTimer); $('#toast').classList.remove('show');
+  w.classList.remove('out'); w.hidden=false;
+  const mid=centerOf(av.getBoundingClientRect()); w.style.setProperty('--wx',mid.x+'px'); w.style.setProperty('--wy',mid.y+'px');   // 光芒的中心對準頭像
+  restart(w,'go'); sfx('win');
+  if(av.animate && !REDUCED){
+    // 贏家的頭像從座位飛到畫面中央
+    const seat=pi===ME?$('#meChip'):$('#seat'+pi), src=seat && (seat.querySelector('.ava')||seat);
+    const to=av.getBoundingClientRect(), fr=src?src.getBoundingClientRect():to, a=centerOf(fr), b=centerOf(to);
+    av.animate([{transform:'translate('+(a.x-b.x)+'px,'+(a.y-b.y)+'px) scale('+Math.max(.15,fr.width/to.width)+')'},{transform:'none'}],
+      {duration:560,easing:'cubic-bezier(.2,1.25,.35,1)',fill:'backwards'});
+    // 四個顏色的小紙片從頭像後面噴出來再落下
+    const W=innerWidth, H=innerHeight, cols=HEX.concat(['#FFF8EA']);
+    for(let k=0;k<70;k++){
+      const bit=document.createElement('i'), s=7+Math.random()*8;
+      bit.style.cssText='left:'+b.x+'px;top:'+b.y+'px;width:'+(s*.72)+'px;height:'+s+'px;background:'+cols[k%5];
+      conf.appendChild(bit);
+      const ang=-Math.PI/2+(Math.random()-.5)*Math.PI*1.5, d=W*(.1+Math.random()*.4);
+      const dx=Math.cos(ang)*d, up=Math.sin(ang)*d*.5-H*.08, rot=(Math.random()-.5)*1500;
+      bit.animate([
+        {transform:'translate(-50%,-50%)',opacity:0,easing:'cubic-bezier(.12,.75,.3,1)'},
+        {offset:.06,opacity:1},
+        {offset:.36,transform:'translate(calc(-50% + '+(dx*.82)+'px),calc(-50% + '+up+'px)) rotate('+(rot*.4)+'deg)',easing:'cubic-bezier(.55,0,.9,.55)'},
+        {transform:'translate(calc(-50% + '+dx+'px),calc(-50% + '+(H-b.y+30)+'px)) rotate('+rot+'deg)',opacity:1}
+      ],{duration:1500+Math.random()*650,delay:430+Math.random()*170,fill:'both'});
+    }
+  }
+  await sleep(REDUCED?1200:2350);
+  if(tok!==token) return;
+  w.classList.add('out'); await sleep(230);
+  if(tok!==token) return;
+  w.hidden=true; w.classList.remove('go','out'); conf.innerHTML='';
+}
+
 // ---------- 把引擎事件一個個演出來 ----------
 async function showEvent(e,tok,evs,i){
   if(e.t==='play'){
@@ -1322,7 +1428,10 @@ async function showEvent(e,tok,evs,i){
     await fly(cardEl(e.card),from,pileRect(),280);
     if(tok!==token) return;
     if(e.gone){ render(); return; }                // 鬼牌、氣球：打出去就消失，演出在後面的事件
-    view.pile.push(e.card); view.color=e.color; render();
+    view.pile.push(e.card); view.color=e.color;
+    const nf = (e.card.c===-1 || view.felt>=0) ? e.color : -1;   // 變色牌、+4 會把桌面染色；染過之後桌面跟著顏色走
+    if(nf!==view.felt){ view.felt=nf; feltTo(nf, e.card.c===-1 ? 1250 : 800); }
+    render();
     const v=e.card.v, col=HEX[e.color];
     if(v==='all'){                                 // 全出牌：同色的手牌一張張飛出去，全出牌留在最上面
       const ex=e.extra||[];
@@ -1349,14 +1458,14 @@ async function showEvent(e,tok,evs,i){
     } else if(v==='d2' || v==='w4'){              // 會累積：下一家可以再疊，沒牌可疊才抽
       const pd=evs.slice(i+1).find(x=>x.t==='pend'), k=evs.indexOf(pd), nx=evs[k+1];
       const tg2=pd.pi, total=pd.total, forced=!!(nx && nx.t==='draw' && nx.clear);
-      sfx(v); if(v==='w4') ripple(e.color);
+      sfx(v);
       const tail = v==='w4' ? '（顏色換成'+CNAME[e.color]+'）' : '';
       await banner({ico:v==='w4'?SVG_WILD:'',spin:v==='w4'?1:0,big:'+'+total,num:1,color:col,wild:v==='w4',dur:1050,
         sub:(forced ? who(tg2)+'沒有牌可以擋，抽 '+total+' 張' : '輪到'+who(tg2)+'：再疊一張，或抽 '+total+' 張')+tail});
       if(tok!==token) return;
       if(forced){ await shoot('+'+total,col,tg2); if(total>=4) quake(); }
     } else if(v==='wild'){
-      sfx('wild'); ripple(e.color);
+      sfx('wild');
       await banner({ico:SVG_WILD,spin:1,big:'變色！',sub:'顏色換成'+CNAME[e.color],color:col,wild:1,dur:900});
     } else sfx('special');   // 迴轉的演出在下面的 rev 事件
   } else if(e.t==='pend'){
@@ -1384,6 +1493,7 @@ async function showEvent(e,tok,evs,i){
     sfx('rev'); orbit(e.dir,HEX[view.color]);
     await banner({ico:SVG_REV,spin:e.dir,big:'迴轉！',color:HEX[view.color],
       sub: two ? who(nx.pi)+'這回合不能出牌' : '出牌順序改成'+(e.dir===1?'順時針':'逆時針')});
+  } else if(e.t==='win'){ await celebrate(e.pi,tok,evs.some(x=>x.t==='joker'));
   } else if(e.t==='joker'){
     sfx('joker'); quake();
     await banner({big:'鬼牌！',sub:who(e.pi)+'抽到鬼牌，直接獲勝',color:'#2A1B3D',wild:1,dur:1500});
@@ -1590,7 +1700,6 @@ function showResult(){
   const w=state.winner, n=state.players.length;
   const pts=state.players.map(p=>p.hand.reduce((a,c)=>a+Engine.points(c),0));
   const gain=pts.reduce((a,b)=>a+b,0);
-  sfx(w===ME?'win':'lose');
   $('#resTitle').textContent = state.byJoker ? (w===ME?'你':seats[w].name)+'抽到鬼牌，直接獲勝！' : w===ME ? '你贏了這一局！' : seats[w].name+'贏了這一局';
   const body=$('#resBody');
   body.innerHTML='<span></span><span class="hd">玩家</span><span class="hd">剩下的牌</span><span class="hd num">本局</span><span class="hd num">累計</span>';
@@ -1629,6 +1738,7 @@ function backToRoom(){
 function showScreen(id){
   ['menu','online','lobby','table'].forEach(s=>{ $('#'+s).hidden = s!==id; });
   if(id==='menu') renderProfile();
+  if(id!=='table') feltTo(-1,0);
   Music.setZone(id==='table'?gameZone():'menu');
 }
 function resetRun(){
