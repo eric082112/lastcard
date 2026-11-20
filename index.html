@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="最後一張！">
 <meta name="theme-color" content="#0B1D24">
-<meta name="lc-build" content="16">
+<meta name="lc-build" content="17">
 <link rel="apple-touch-icon" sizes="180x180" href="icon-180-5e34f975.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192-e4b190bb.png">
 <meta property="og:title" content="最後一張！">
@@ -335,8 +335,13 @@ input:focus{outline:3px solid var(--c1)}
 .card.joker{--col:#2A1B3D;color:#FFD45C}
 .card.joker .big{font-size:calc(var(--h)*.4);padding-bottom:12%}
 .card.balloon{--col:#58C4F0}
-#lbOpts{display:flex;align-items:center;gap:min(4vw,30px);margin-bottom:1.8vh}
-.optitem{display:flex;align-items:center;gap:10px;font-weight:800;font-size:15px}
+#lbOpts{display:flex;align-items:center;gap:10px;margin-bottom:1.8vh;min-width:0}
+#modeBtn{flex:none;font-size:15px;padding:8px 18px}
+#modeOn{display:flex;flex-wrap:wrap;gap:6px;min-width:0}
+#modeOn span{font-size:12px;font-weight:800;padding:3px 9px;border-radius:10px;background:rgba(255,248,234,.16);white-space:nowrap}
+#modeOn span.crazy{background:var(--c0);color:#fff}
+#modeList{display:grid;gap:1.6vh;min-width:min(60vw,250px);margin:.6vh 0 2.2vh}
+.optitem{display:flex;align-items:center;justify-content:space-between;gap:24px;font-weight:800;font-size:17px}
 .sw{flex:none;width:58px;height:32px;border-radius:16px;border:0;padding:0;background:rgba(255,248,234,.22);position:relative;transition:background .15s}
 .sw::after{content:"";position:absolute;left:3px;top:3px;width:26px;height:26px;border-radius:50%;background:var(--cream);transition:transform .15s}
 .sw[aria-pressed=true]{background:var(--c2)}
@@ -421,6 +426,23 @@ input:focus{outline:3px solid var(--c1)}
 @keyframes wdrop{from{opacity:0;transform:translateY(-70%) scale(.4)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){#winFx.go::before,#winFx.go .wbig span,#winFx.go .wsub{animation:none;opacity:1}
   #winFx.go .rays{animation:none;opacity:.35}}
+/* ---------- 大廳玩家列：自己那一列用亮框標出來；「房主」不換行 ---------- */
+#lobby{grid-template-columns:1fr 1.3fr}
+.lb-r{padding:0 3.5vw 0 2vw}
+.prow{gap:8px;padding:4px 10px}
+.prow .tag{flex:none;white-space:nowrap}
+.prow.me{box-shadow:inset 0 0 0 2px rgba(255,248,234,.75)}
+#lbLink{overflow-wrap:anywhere}
+/* ---------- 瘋狂模式開場橫幅 ---------- */
+#banner.crazybn .bbig{font-size:calc(var(--bh)*.5);letter-spacing:.03em;
+  text-shadow:.045em 0 0 var(--ink),-.045em 0 0 var(--ink),0 .045em 0 var(--ink),0 -.045em 0 var(--ink),
+    .032em .032em 0 var(--ink),-.032em .032em 0 var(--ink),.032em -.032em 0 var(--ink),-.032em -.032em 0 var(--ink),0 .11em 0 rgba(0,0,0,.45)}
+#banner.crazybn .bbig span{display:inline-block}
+#banner.crazybn .bbig span:nth-child(4n+1){color:var(--c0)} #banner.crazybn .bbig span:nth-child(4n+2){color:var(--c1)}
+#banner.crazybn .bbig span:nth-child(4n+3){color:var(--c2)} #banner.crazybn .bbig span:nth-child(4n){color:var(--c3)}
+#banner.crazybn.go .bbig span{animation:crazyJig .26s ease-in-out calc(var(--k)*-.07s) infinite alternate}
+@keyframes crazyJig{from{transform:translateY(-9%) rotate(-7deg)}to{transform:translateY(9%) rotate(7deg)}}
+@media (prefers-reduced-motion:reduce){#banner.crazybn.go .bbig span{animation:none}}
 #ver{position:absolute;left:calc(env(safe-area-inset-left) + 12px);bottom:calc(env(safe-area-inset-bottom) + 8px);font-size:11px;opacity:.55}
 </style>
 </head>
@@ -454,7 +476,7 @@ input:focus{outline:3px solid var(--c1)}
         <input id="myName" maxlength="8" placeholder="你的名字" aria-label="你的名字" autocomplete="off" autocapitalize="off" spellcheck="false">
       </div>
     </div>
-    <div id="ver">第 16 版</div>
+    <div id="ver">第 17 版</div>
     <div id="menuTop"><button class="ico musicBtn" aria-label="背景音樂開關"></button></div>
     <button id="creditBtn">音樂出處</button>
   </section>
@@ -483,7 +505,7 @@ input:focus{outline:3px solid var(--c1)}
     </div>
     <div class="lb-r">
       <div id="lbPlayers"></div>
-      <div id="lbOpts"><span class="optitem">鬼牌<button class="sw" id="sw-joker" aria-label="鬼牌" aria-pressed="false"></button></span><span class="optitem">氣球<button class="sw" id="sw-balloon" aria-label="氣球" aria-pressed="false"></button></span></div>
+      <div id="lbOpts"><button class="btn" id="modeBtn">遊戲玩法</button><span id="modeOn"></span></div>
       <div id="lbHost">
         <div class="picker-row">
           <span class="lbl">總人數</span>
@@ -541,6 +563,15 @@ input:focus{outline:3px solid var(--c1)}
       <button class="btn ghost" id="menuBtn">回主選單</button></div></div>
   </div>
 
+  <div class="modal" id="modeModal" hidden>
+    <div class="sheet"><h2>遊戲玩法</h2>
+      <div id="modeList">
+        <div class="optitem"><span>鬼牌</span><button class="sw" id="sw-joker" aria-label="鬼牌" aria-pressed="false"></button></div>
+        <div class="optitem"><span>氣球</span><button class="sw" id="sw-balloon" aria-label="氣球" aria-pressed="false"></button></div>
+        <div class="optitem"><span>瘋狂模式</span><button class="sw" id="sw-crazy" aria-label="瘋狂模式" aria-pressed="false"></button></div>
+      </div>
+      <div class="row-btns"><button class="btn" id="modeClose">關閉</button></div></div>
+  </div>
   <div class="modal" id="creditModal" hidden>
     <div class="sheet"><h2>音樂出處</h2>
       <ul id="creditList"></ul>
@@ -572,15 +603,19 @@ input:focus{outline:3px solid var(--c1)}
 /*ENGINE-START*/
 // 規則引擎：不碰畫面，之後做連線版可以直接沿用
 const Engine = (() => {
-  function makeDeck(){
+  // 一般 124 張；瘋狂模式 164 張：+2 每色 8 張（共 32）、+4 共 16 張、變色 8 張，全出牌一樣每色 4 張（共 16）
+  function makeDeck(crazy){
     const d=[]; let id=0;
+    const nD2=crazy?8:2, nWild=crazy?8:4, nW4=crazy?16:4;
     for(let c=0;c<4;c++){
       d.push({id:id++,c,v:'0'});
       for(let n=1;n<=9;n++) for(let k=0;k<2;k++) d.push({id:id++,c,v:String(n)});
-      for(const v of ['skip','rev','d2']) for(let k=0;k<2;k++) d.push({id:id++,c,v});
+      for(const v of ['skip','rev']) for(let k=0;k<2;k++) d.push({id:id++,c,v});
+      for(let k=0;k<nD2;k++) d.push({id:id++,c,v:'d2'});
       for(let k=0;k<4;k++) d.push({id:id++,c,v:'all'});          // 全出牌：每色 4 張
     }
-    for(let k=0;k<4;k++){ d.push({id:id++,c:-1,v:'wild'}); d.push({id:id++,c:-1,v:'w4'}); }
+    for(let k=0;k<nWild;k++) d.push({id:id++,c:-1,v:'wild'});
+    for(let k=0;k<nW4;k++) d.push({id:id++,c:-1,v:'w4'});
     return d;
   }
   function shuffle(a,rng){
@@ -590,22 +625,23 @@ const Engine = (() => {
   const isNum = c => c.v.length===1;
   const isDraw = c => c.v==='d2' || c.v==='w4';
   // 加開的玩法（房主在大廳開關）
-  //   鬼牌：抽牌時有 1% 機率抽到，不在 124 張裡，打出去直接獲勝
+  //   鬼牌：抽牌時有 0.5% 機率抽到（瘋狂模式 1%），不在牌堆裡，打出去直接獲勝
   //   氣球：數字牌離開牌堆時有 10% 機率右上角帶著氣球（card.b）
-  const JOKER_P = 0.005, BALLOON_P = 0.10;
+  //   瘋狂模式：牌堆換成 164 張的版本（見 makeDeck）
+  const JOKER_P = 0.005, JOKER_P_CRAZY = 0.01, BALLOON_P = 0.10;
   function mark(s,c){
     if(c && isNum(c)){ if(s.opts && s.opts.balloon && s.rng()<BALLOON_P) c.b=1; else delete c.b; }
     return c;
   }
   function newGame(n,rng,opts){
     rng = rng||Math.random;
-    const deck=shuffle(makeDeck(),rng);
+    const crazy=!!(opts&&opts.crazy), deck=shuffle(makeDeck(crazy),rng);
     // discard 只留桌面上看得到的最上面 3 張；更早出過的牌放進 used，等於壓在牌堆最底下
     // tint：這一局有沒有人出過變色牌或 +4（出過之後桌面才跟著顏色走）
     // pending：+2／+4 疊加到現在累積要抽幾張。balloon：{n 幾顆, left 還要傳幾次, at 在誰手上}
     const s={players:Array.from({length:n},()=>({hand:[]})),deck,used:[],discard:[],color:0,dir:1,
              turn:Math.floor(rng()*n),phase:'play',drawnId:null,winner:-1,rng,
-             opts:{joker:!!(opts&&opts.joker),balloon:!!(opts&&opts.balloon)},nextId:1000,balloon:null,pending:0,tint:false};
+             opts:{joker:!!(opts&&opts.joker),balloon:!!(opts&&opts.balloon),crazy},nextId:1000,balloon:null,pending:0,tint:false};
     for(let k=0;k<7;k++) for(const p of s.players) p.hand.push(mark(s,deck.pop()));   // 開局不會發到鬼牌
     let i=deck.length-1; while(!isNum(deck[i])) i--;      // 起始牌一定是數字牌
     const first=deck.splice(i,1)[0]; delete first.b;
@@ -636,7 +672,7 @@ const Engine = (() => {
   const hasJoker = s => s.players.some(p=>p.hand.some(c=>c.v==='joker'));
   function take(s,ev){
     // 鬼牌全場只會有一張：已經有人拿著，就不會再抽到第二張
-    if(s.opts && s.opts.joker && !hasJoker(s) && s.rng()<JOKER_P) return {id:s.nextId++,c:-2,v:'joker'};
+    if(s.opts && s.opts.joker && !hasJoker(s) && s.rng()<(s.opts.crazy?JOKER_P_CRAZY:JOKER_P)) return {id:s.nextId++,c:-2,v:'joker'};
     if(!s.deck.length) recycle(s,ev,true);       // 上面的牌抽完了，底下還沒洗的先洗
     return s.deck.length ? mark(s,s.deck.pop()) : null;
   }
@@ -869,8 +905,8 @@ const store = {
   get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
   set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
 };
-const cfg = {n:4, sound:true, music:true, ava:'pig', opts:{joker:false,balloon:false}};
-try{ const saved=JSON.parse(store.get('lastcard-cfg')||'null'); if(saved){ cfg.n=saved.n>=2&&saved.n<=6?saved.n:4; cfg.sound=saved.sound!==false; cfg.music=saved.music!==false; if(saved.ava) cfg.ava=saved.ava; if(saved.opts){ cfg.opts.joker=!!saved.opts.joker; cfg.opts.balloon=!!saved.opts.balloon; } } }catch(e){}
+const cfg = {n:4, sound:true, music:true, ava:'pig', opts:{joker:false,balloon:false,crazy:false}};
+try{ const saved=JSON.parse(store.get('lastcard-cfg')||'null'); if(saved){ cfg.n=saved.n>=2&&saved.n<=6?saved.n:4; cfg.sound=saved.sound!==false; cfg.music=saved.music!==false; if(saved.ava) cfg.ava=saved.ava; if(saved.opts){ cfg.opts.joker=!!saved.opts.joker; cfg.opts.balloon=!!saved.opts.balloon; cfg.opts.crazy=!!saved.opts.crazy; } } }catch(e){}
 function saveCfg(){ store.set('lastcard-cfg',JSON.stringify(cfg)); }
 
 let mode='local';           // 'local' 單機 / 'online' 連線
@@ -950,6 +986,7 @@ function sfx(k){
     else if(k==='pop'){ tone(900,t,.07,'square',.18,120); tone(70,t,.3,'sine',.3,35); }
     else if(k==='joker'){ [196,233,294,392].forEach(f=>tone(f,t,.9,'sawtooth',.05)); [784,988,1175].forEach((f,i)=>tone(f,t+.25+i*.09,.3,'triangle',.09)); }
     else if(k==='splat'){ tone(210,t,.16,'sawtooth',.09,55); tone(90,t,.22,'sine',.2,40); }
+    else if(k==='crazy'){ [262,330,392,523,659,784,1047].forEach((f,i)=>tone(f,t+i*.055,.12,'square',.05)); tone(110,t+.42,.5,'sawtooth',.07,55); tone(1568,t+.42,.35,'triangle',.08); }
     else if(k==='bad') tone(160,t,.16,'sawtooth',.06);
     else if(k==='win') [523,659,784,1047].forEach((f,i)=>tone(f,t+i*.11,.22));
     else if(k==='lose') [440,370,311].forEach((f,i)=>tone(f,t+i*.16,.26,'sine'));
@@ -1199,6 +1236,8 @@ function banner(o){
   const ico=b.querySelector('.bico');
   ico.className='bico'+(o.spin?(o.spin>0?' cw':' ccw'):''); ico.innerHTML=o.ico||''; ico.hidden=!o.ico;
   const big=b.querySelector('.bbig'); big.textContent=o.big; big.classList.toggle('num',!!o.num);
+  b.classList.toggle('crazybn',!!o.crazy);
+  if(o.crazy) big.innerHTML=Array.from(o.big).map((ch,k)=>'<span style="--k:'+k+'">'+ch+'</span>').join('');
   b.querySelector('.bsub').textContent=o.sub||'';
   restart(b,'go');
   return sleep(dur).then(()=>{ if(seq===bnSeq) b.classList.remove('go'); });
@@ -1557,13 +1596,15 @@ async function pump(){
   if(pumping) return;
   pumping=true; const tok=token;
   while(queue.length && tok===token){
-    const it=queue.shift();
+    const it=queue.shift(); let intro=false;
     if(it.g){                                   // 連線：收到房間的新狀態
       const g=it.g, me=g.seats.findIndex(s=>s.pid===Online.pid);
       if(me<0){ leaveToMenu('這一局你不在座位上'); return; }
       const cont = state && it.seq===shownSeq+1 && g.ev && g.ev.length && g.ev[0].t!=='deal';
       if(cont){ busy=true; render(); await runEvents(g.ev,tok); if(tok!==token) return; }
-      else { clearFx(); $('#resultModal').hidden=true; resultSeq=-1; }
+      else { clearFx(); $('#resultModal').hidden=true; resultSeq=-1;
+        // 瘋狂模式剛發完牌：所有人先看到「徹底瘋狂吧！」
+        intro = !!(g.ev && g.ev[0] && g.ev[0].t==='deal' && g.ev[0].start && g.state.opts && g.state.opts.crazy); }
       seats=g.seats; ME=me; scores=g.scores; state=g.state; state.rng=Math.random;
     } else {                                    // 單機
       busy=true; render();
@@ -1571,6 +1612,10 @@ async function pump(){
     }
     shownSeq=it.seq; syncView(); render(); flushWaiters();
     if(!$('#table').hidden) Music.setZone(gameZone());
+    if(intro && !$('#table').hidden){
+      busy=true; render(); sfx('crazy');
+      await banner({big:'徹底瘋狂吧！',crazy:true,wild:true,dur:1900}); if(tok!==token) return;
+    }
   }
   if(tok!==token) return;
   pumping=false;
@@ -1737,6 +1782,7 @@ function backToRoom(){
 // ---------- 畫面切換 ----------
 function showScreen(id){
   ['menu','online','lobby','table'].forEach(s=>{ $('#'+s).hidden = s!==id; });
+  $('#modeModal').hidden=true;
   if(id==='menu') renderProfile();
   if(id!=='table') feltTo(-1,0);
   Music.setZone(id==='table'?gameZone():'menu');
@@ -1770,11 +1816,15 @@ function leaveToMenu(msg){
   if(msg) toast(msg,2600);
 }
 // ---------- 遊戲設定（加開的玩法）：在房間大廳裡直接開關，只有房主能改 ----------
-const OPT_KEYS = ['joker','balloon'];
-function roomOpts(){ const o=Online.meta.opts||{}; return {joker:!!o.joker,balloon:!!o.balloon}; }
+// 遊戲玩法：大廳按「遊戲玩法」打開視窗，三個開關各自獨立。只有房主能改，其他人打開看得到
+const OPT_KEYS = ['joker','balloon','crazy'];
+const OPT_NAMES = {joker:'鬼牌',balloon:'氣球',crazy:'瘋狂模式'};
+function roomOpts(){ const o=Online.meta.opts||{}; return {joker:!!o.joker,balloon:!!o.balloon,crazy:!!o.crazy}; }
 function renderOpts(){
   const o=roomOpts(), can=Online.isHost() && Online.meta.status!=='playing';
   OPT_KEYS.forEach(k=>{ const b=$('#sw-'+k); b.setAttribute('aria-pressed',o[k]?'true':'false'); b.disabled=!can; });
+  // 按鈕旁邊列出現在開了哪些，不用打開視窗也看得到
+  $('#modeOn').innerHTML=OPT_KEYS.filter(k=>o[k]).map(k=>'<span class="'+k+'">'+OPT_NAMES[k]+'</span>').join('');
 }
 function toggleOpt(k){
   if(!Online.code || !Online.isHost() || Online.meta.status==='playing') return;
@@ -1841,7 +1891,7 @@ const Online = {
       this.code=String(1000+Math.floor(Math.random()*9000));
       const m=(await withTimeout(this.ref('meta').once('value'))).val();
       if(!m || Date.now()-(m.created||0)>6*3600e3){
-        const opts={joker:cfg.opts.joker,balloon:cfg.opts.balloon};
+        const opts={joker:cfg.opts.joker,balloon:cfg.opts.balloon,crazy:cfg.opts.crazy};
         await withTimeout(this.ref('').set({meta:{status:'lobby',created:this.TS(),opts}}));
         this.meta={status:'lobby',opts};
         return this.attach();
@@ -1902,7 +1952,7 @@ const Online = {
     for(let b=0;sts.length<total;b++) sts.push({bot:true,name:BOTS[b].name,ava:BOTS[b].ava});
     const prev=(await withTimeout(this.ref('game/seq').once('value'))).val()||0;
     await withTimeout(this.ref('game').set({seq:prev+1,
-      json:JSON.stringify({state:Engine.newGame(total,undefined,roomOpts()),ev:[{t:'deal'}],scores:sts.map(()=>0),seats:sts})}));
+      json:JSON.stringify({state:Engine.newGame(total,undefined,roomOpts()),ev:[{t:'deal',start:true}],scores:sts.map(()=>0),seats:sts})}));
     await this.ref('meta/status').set('playing');
   },
   again(){
@@ -1911,7 +1961,7 @@ const Online = {
       if(!cur || !cur.json) return;
       const g=JSON.parse(cur.json);
       if(g.state.phase!=='over') return;
-      g.state=Engine.newGame(g.seats.length,undefined,g.state.opts); g.ev=[{t:'deal'}];
+      g.state=Engine.newGame(g.seats.length,undefined,g.state.opts); g.ev=[{t:'deal',start:true}];
       return {seq:cur.seq+1,json:JSON.stringify(g)};
     },undefined,false);
     this.ref('meta/status').set('playing');
@@ -1968,9 +2018,9 @@ function renderLobby(){
   let k=0;
   list.forEach(p=>{
     const isOn=Online.isOn(p.pid), row=document.createElement('div');
-    row.className='prow'+(isOn?'':' off');
+    row.className='prow'+(isOn?'':' off')+(p.pid===Online.pid?' me':'');
     const tag = !isOn ? '離線' : (on[0] && on[0].pid===p.pid ? '房主' : '');
-    row.innerHTML='<div class="ava">'+avaHTML(AVATARS[p.ava]?p.ava:AV_IDS[k++%AV_IDS.length])+'</div><span>'+esc(p.name)+(p.pid===Online.pid?'（你）':'')+
+    row.innerHTML='<div class="ava">'+avaHTML(AVATARS[p.ava]?p.ava:AV_IDS[k++%AV_IDS.length])+'</div><span>'+esc(p.name)+
       '</span><span class="tag">'+tag+'</span>';
     box.appendChild(row);
   });
@@ -2059,6 +2109,9 @@ function init(){
   });
   bindEmotes();
   OPT_KEYS.forEach(k=>$('#sw-'+k).addEventListener('click',()=>toggleOpt(k)));
+  $('#modeBtn').addEventListener('click',()=>{ renderOpts(); $('#modeModal').hidden=false; });
+  $('#modeClose').addEventListener('click',()=>{ $('#modeModal').hidden=true; });
+  $('#modeModal').addEventListener('click',e=>{ if(e.target===e.currentTarget) e.currentTarget.hidden=true; });
   $('#deck').addEventListener('click',onDeck);
   $('#passBtn').addEventListener('click',onPass);
   $('#unoBtn').addEventListener('click',onUno);
