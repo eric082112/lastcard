@@ -352,6 +352,8 @@ input:focus{outline:3px solid var(--c1)}
 #modeOn{display:flex;flex-wrap:wrap;gap:6px;min-width:0}
 #modeOn span{font-size:12px;font-weight:800;padding:3px 9px;border-radius:10px;background:rgba(255,248,234,.16);white-space:nowrap}
 #modeOn span.crazy{background:var(--c0);color:#fff}
+#shufRow{font-size:clamp(13px,3.6vh,16px)}
+#shufRow .sw{transform:scale(.82);transform-origin:left center}
 #modeList{display:grid;gap:1.6vh;min-width:min(60vw,250px);margin:.6vh 0 2.2vh}
 .optitem{display:flex;align-items:center;justify-content:space-between;gap:24px;font-weight:800;font-size:17px}
 .sw{flex:none;width:58px;height:32px;border-radius:16px;border:0;padding:0;background:rgba(255,248,234,.22);position:relative;transition:background .15s}
@@ -527,6 +529,7 @@ input:focus{outline:3px solid var(--c1)}
           <button class="arrow" id="nNext" aria-label="增加玩家人數"><svg viewBox="0 0 16 16"><path d="M5 2l7 6-7 6z"/></svg></button>
           <button class="btn" id="startBtn">開始</button>
         </div>
+        <div class="picker-row" id="shufRow"><span class="lbl">每局隨機換座位</span><button class="sw" id="sw-lshuffle" aria-label="每局隨機換座位" aria-pressed="false"></button></div>
       </div>
     </div>
     <div class="menu-r">
@@ -540,7 +543,7 @@ input:focus{outline:3px solid var(--c1)}
         <input id="myName" maxlength="8" placeholder="你的名字" aria-label="你的名字" autocomplete="off" autocapitalize="off" spellcheck="false">
       </div>
     </div>
-    <div id="ver">第 22 版</div>
+    <div id="ver">第 23 版</div>
     <div id="menuTop"><button class="ico musicBtn" aria-label="背景音樂開關"></button></div>
     <button id="creditBtn">音樂出處</button>
   </section>
@@ -633,6 +636,7 @@ input:focus{outline:3px solid var(--c1)}
         <div class="optitem"><span>鬼牌</span><button class="sw" id="sw-joker" aria-label="鬼牌" aria-pressed="false"></button></div>
         <div class="optitem"><span>氣球</span><button class="sw" id="sw-balloon" aria-label="氣球" aria-pressed="false"></button></div>
         <div class="optitem"><span>瘋狂模式</span><button class="sw" id="sw-crazy" aria-label="瘋狂模式" aria-pressed="false"></button></div>
+        <div class="optitem"><span>每局隨機換座位</span><button class="sw" id="sw-shuffle" aria-label="每局隨機換座位" aria-pressed="false"></button></div>
       </div>
       <div class="row-btns"><button class="btn" id="modeClose">關閉</button></div></div>
   </div>
@@ -1015,8 +1019,8 @@ const store = {
   get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
   set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
 };
-const cfg = {n:4, sound:true, music:true, ava:'pig', opts:{joker:false,balloon:false,crazy:false}};
-try{ const saved=JSON.parse(store.get('lastcard-cfg')||'null'); if(saved){ cfg.n=saved.n>=2&&saved.n<=6?saved.n:4; cfg.sound=saved.sound!==false; cfg.music=saved.music!==false; if(saved.ava) cfg.ava=saved.ava; if(saved.opts){ cfg.opts.joker=!!saved.opts.joker; cfg.opts.balloon=!!saved.opts.balloon; cfg.opts.crazy=!!saved.opts.crazy; } } }catch(e){}
+const cfg = {n:4, sound:true, music:true, ava:'pig', opts:{joker:false,balloon:false,crazy:false,shuffle:false}};
+try{ const saved=JSON.parse(store.get('lastcard-cfg')||'null'); if(saved){ cfg.n=saved.n>=2&&saved.n<=6?saved.n:4; cfg.sound=saved.sound!==false; cfg.music=saved.music!==false; if(saved.ava) cfg.ava=saved.ava; if(saved.opts){ cfg.opts.joker=!!saved.opts.joker; cfg.opts.balloon=!!saved.opts.balloon; cfg.opts.crazy=!!saved.opts.crazy; cfg.opts.shuffle=!!saved.opts.shuffle; } } }catch(e){}
 function saveCfg(){ store.set('lastcard-cfg',JSON.stringify(cfg)); }
 
 let mode='local';           // 'local' 單機 / 'online' 連線
@@ -2035,6 +2039,7 @@ async function pump(){
       await runEvents(it.ev,tok); if(tok!==token) return;
     }
     shownSeq=it.seq; syncView(); render(); flushWaiters();
+    if(it.g && it.g.ev && it.g.ev[0] && it.g.ev[0].t==='deal' && it.g.ev[0].shuf && !$('#table').hidden) toast('座位重新排過了',1800);
     if(!$('#table').hidden) Music.setZone(gameZone());
     if(intro && !$('#table').hidden){
       busy=true; render(); sfx('crazy');
@@ -2224,11 +2229,16 @@ function resetRun(){
 function startLocal(keepScores){
   resetRun();
   mode='local'; ME=0;
-  seats=[{name:myName()||'你',ava:cfg.ava}].concat(BOTS.slice(0,cfg.n-1).map(b=>({name:b.name,ava:b.ava,bot:true})));
-  if(!keepScores || scores.length!==cfg.n) scores=seats.map(()=>0);
+  const fresh=[{name:myName()||'你',ava:cfg.ava}].concat(BOTS.slice(0,cfg.n-1).map(b=>({name:b.name,ava:b.ava,bot:true})));
+  // 再來一局：沿用上一局的座位順序（可能已經換過），分數才會跟著人走
+  if(keepScores && scores.length===cfg.n && seats.length===cfg.n && seats.slice(1).every(s=>s.bot)) seats[0]=fresh[0];
+  else { seats=fresh; scores=seats.map(()=>0); }
+  const perm = cfg.opts.shuffle ? seatPerm(cfg.n) : null;
+  if(perm){ seats=perm.map(i=>seats[i]); scores=perm.map(i=>scores[i]); }
   state=Engine.newGame(cfg.n);                    // 和電腦玩是基本規則；加開玩法在房間裡設定
   busy=true; syncView();
   showScreen('table'); render();
+  if(perm) toast('座位重新排過了',1800);
   settle(); emoTip();
 }
 function toMenu(){
@@ -2241,9 +2251,18 @@ function leaveToMenu(msg){
 }
 // ---------- 遊戲設定（加開的玩法）：在房間大廳裡直接開關，只有房主能改 ----------
 // 遊戲玩法：大廳按「遊戲玩法」打開視窗，三個開關各自獨立。只有房主能改，其他人打開看得到
-const OPT_KEYS = ['joker','balloon','crazy'];
-const OPT_NAMES = {joker:'鬼牌',balloon:'氣球',crazy:'瘋狂模式'};
-function roomOpts(){ const o=Online.meta.opts||{}; return {joker:!!o.joker,balloon:!!o.balloon,crazy:!!o.crazy}; }
+const OPT_KEYS = ['joker','balloon','crazy','shuffle'];
+const OPT_NAMES = {joker:'鬼牌',balloon:'氣球',crazy:'瘋狂模式',shuffle:'換座位'};
+function roomOpts(){ const o=Online.meta.opts||{}; return {joker:!!o.joker,balloon:!!o.balloon,crazy:!!o.crazy,shuffle:!!o.shuffle}; }
+// 每局隨機換座位：第 0 個位子不動，其餘重新排列，而且一定和原本不同。
+// 大家看到的都是「自己在下面」，整桌一起轉一圈等於沒換，所以固定一個位子才保證左右鄰居真的變了。
+// 回傳新的順序（舊位子的編號）；不到 3 人時沒有東西可換，回傳 null
+function seatPerm(n){
+  if(n<3) return null;
+  const a=[]; for(let i=1;i<n;i++) a.push(i);
+  do{ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } }while(a.every((v,i)=>v===i+1));
+  return [0].concat(a);
+}
 function renderOpts(){
   const o=roomOpts(), can=Online.isHost() && Online.meta.status!=='playing';
   OPT_KEYS.forEach(k=>{ const b=$('#sw-'+k); b.setAttribute('aria-pressed',o[k]?'true':'false'); b.disabled=!can; });
@@ -2315,7 +2334,7 @@ const Online = {
       this.code=String(1000+Math.floor(Math.random()*9000));
       const m=(await withTimeout(this.ref('meta').once('value'))).val();
       if(!m || Date.now()-(m.created||0)>6*3600e3){
-        const opts={joker:cfg.opts.joker,balloon:cfg.opts.balloon,crazy:cfg.opts.crazy};
+        const opts={joker:cfg.opts.joker,balloon:cfg.opts.balloon,crazy:cfg.opts.crazy,shuffle:cfg.opts.shuffle};
         await withTimeout(this.ref('').set({meta:{status:'lobby',created:this.TS(),opts}}));
         this.meta={status:'lobby',opts};
         return this.attach();
@@ -2372,20 +2391,25 @@ const Online = {
   async start(){
     const humans=this.sorted().filter(p=>this.isOn(p.pid)).slice(0,MAXP);
     const total=Math.max(2,Math.min(MAXP,Math.max(this.total,humans.length)));
-    const sts=humans.map((p,i)=>({pid:p.pid,name:p.name,ava:AVATARS[p.ava]?p.ava:AV_IDS[i]}));
+    let sts=humans.map((p,i)=>({pid:p.pid,name:p.name,ava:AVATARS[p.ava]?p.ava:AV_IDS[i]}));
     for(let b=0;sts.length<total;b++) sts.push({bot:true,name:BOTS[b].name,ava:BOTS[b].ava});
+    const perm = roomOpts().shuffle ? seatPerm(total) : null;
+    if(perm) sts=perm.map(i=>sts[i]);
     const prev=(await withTimeout(this.ref('game/seq').once('value'))).val()||0;
     await withTimeout(this.ref('game').set({seq:prev+1,
-      json:JSON.stringify({state:Engine.newGame(total,undefined,roomOpts()),ev:[{t:'deal',start:true}],scores:sts.map(()=>0),seats:sts})}));
+      json:JSON.stringify({state:Engine.newGame(total,undefined,roomOpts()),ev:[{t:'deal',start:true,shuf:!!perm}],scores:sts.map(()=>0),seats:sts})}));
     await this.ref('meta/status').set('playing');
   },
   again(){
     if(this.meta.status==='lobby') return;       // 已經有人回到房間，改由房主在大廳開始
+    const shuf=roomOpts().shuffle;
     this.ref('game').transaction(cur=>{
       if(!cur || !cur.json) return;
       const g=JSON.parse(cur.json);
       if(g.state.phase!=='over') return;
-      g.state=Engine.newGame(g.seats.length,undefined,g.state.opts); g.ev=[{t:'deal',start:true}];
+      const perm = shuf ? seatPerm(g.seats.length) : null;     // 座位和累計分數一起搬，分數才會跟著人走
+      if(perm){ g.seats=perm.map(i=>g.seats[i]); g.scores=perm.map(i=>(g.scores||[])[i]||0); }
+      g.state=Engine.newGame(g.seats.length,undefined,g.state.opts); g.ev=[{t:'deal',start:true,shuf:!!perm}];
       return {seq:cur.seq+1,json:JSON.stringify(g)};
     },undefined,false);
     this.ref('meta/status').set('playing');
@@ -2562,6 +2586,9 @@ function init(){
   window.addEventListener('resize',()=>{ if(view && state){ layoutHand(); placeBalloon(); } });
   document.addEventListener('gesturestart',e=>e.preventDefault());
   $('#nVal').textContent=cfg.n+' 人';
+  const lsw=$('#sw-lshuffle'), lswSync=()=>lsw.setAttribute('aria-pressed',cfg.opts.shuffle?'true':'false');
+  lsw.addEventListener('click',()=>{ cfg.opts.shuffle=!cfg.opts.shuffle; saveCfg(); sfx('draw'); lswSync(); });
+  lswSync();
   setSound(cfg.sound);
   // 從邀請連結進來：直接帶到加入房間
   let room=''; try{ room=new URLSearchParams(location.search).get('room')||''; }catch(e){}
