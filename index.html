@@ -281,7 +281,11 @@ input:focus{outline:3px solid var(--c1)}
 .prow{display:flex;align-items:center;gap:10px;background:rgba(11,29,36,.55);border-radius:14px;padding:4px 12px;
   font-weight:800;font-size:15px;min-height:calc(var(--mh) + 2px)}
 .prow.empty{opacity:.45;font-weight:600;font-size:13px;border:1.5px dashed rgba(255,248,234,.4);background:none}
-.prow.off{opacity:.5}
+.prow.off>*:not(.kick){opacity:.5}
+.prow .ava{flex:none}
+.prow .kick{flex:none;border:0;border-radius:10px;padding:5px 8px;min-width:26px;font:inherit;font-size:12px;font-weight:800;white-space:nowrap;background:rgba(255,248,234,.18);color:var(--cream);cursor:pointer}
+.prow .kick.arm{background:var(--c0);color:#fff}
+.prow.arming .tag{display:none}
 .prow .ava{width:calc(var(--mh)*.8);height:calc(var(--mh)*.8);font-size:calc(var(--mh)*.5)}
 .prow .tag{margin-left:auto;font-size:12px;font-weight:700;opacity:.8}
 #lbHost{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
@@ -543,7 +547,7 @@ input:focus{outline:3px solid var(--c1)}
         <input id="myName" maxlength="8" placeholder="你的名字" aria-label="你的名字" autocomplete="off" autocapitalize="off" spellcheck="false">
       </div>
     </div>
-    <div id="ver">第 23 版</div>
+    <div id="ver">第 24 版</div>
     <div id="menuTop"><button class="ico musicBtn" aria-label="背景音樂開關"></button></div>
     <button id="creditBtn">音樂出處</button>
   </section>
@@ -2366,7 +2370,16 @@ const Online = {
     this.refs=[conn,pr,mr,gr,er]; this.qSeq=-1; this.qJson='';
     try{ history.replaceState(null,'','?room='+this.code); }catch(e){}
     showScreen('lobby'); renderLobby();
-    pr.on('value',sn=>{ this.players=sn.val()||{}; onPlayers(); });
+    pr.on('value',sn=>{
+      this.players=sn.val()||{};
+      // 名單裡沒有我（或只剩重新連上時自動補回的連線記號）：被房主請出去了。遊戲進行中不會被踢，所以只在大廳階段判斷
+      const mine=this.players[this.pid];
+      if(this.code && this.meta.status!=='playing' && (!mine || !mine.name)){
+        try{ me.onDisconnect().cancel(); me.remove(); }catch(e){}
+        leaveToMenu('你被房主請出房間了'); return;
+      }
+      onPlayers();
+    });
     mr.on('value',sn=>{ this.meta=sn.val()||{}; onMeta(); });
     gr.on('value',sn=>{ const v=sn.val(); if(v && v.json) onGame(v); });
     let first=true;                                  // 進房時留在房間裡的舊互動不重播
@@ -2414,6 +2427,11 @@ const Online = {
     },undefined,false);
     this.ref('meta/status').set('playing');
   },
+  // 房主把人請出房間：刪掉他在名單上的那一筆。對方的畫面收到後會自己回主選單
+  kick(pid,name){
+    if(!this.code || !this.isHost() || this.meta.status==='playing' || pid===this.pid) return;
+    this.ref('players/'+pid).remove().then(()=>toast('已把 '+(name||'這位玩家')+' 請出房間',1800),()=>toast('踢不出去，請再試一次',2000));
+  },
   emote(from,to,kind){
     const id=Math.random().toString(36).slice(2,10); this.lastEmote=id;
     try{ this.ref('emote').set({id,from,to,kind}); }catch(e){}
@@ -2432,6 +2450,7 @@ const Online = {
     },undefined,false).then(r=>r.committed?r.snapshot.val().seq:0,()=>0);
   }
 };
+const kickArm={pid:'',until:0,timer:0};
 function onGame(v){
   if(v.seq<Online.qSeq) return;
   if(v.seq===Online.qSeq && v.json===Online.qJson) return;
@@ -2458,7 +2477,7 @@ function onMeta(){
   else if(mode==='online' && !$('#resultModal').hidden) renderResultBtns();
 }
 function renderLobby(){
-  const list=Online.sorted(), on=list.filter(p=>Online.isOn(p.pid)), host=Online.isHost();
+  const list=Online.sorted(), on=list.filter(p=>Online.isOn(p.pid)), host=Online.isHost(), playing=Online.meta.status==='playing';
   $('#lbCode').textContent=Online.code;
   renderOpts();
   $('#lbLink').textContent=inviteUrl();
@@ -2470,13 +2489,24 @@ function renderLobby(){
     const tag = !isOn ? '離線' : (on[0] && on[0].pid===p.pid ? '房主' : '');
     row.innerHTML='<div class="ava">'+avaHTML(AVATARS[p.ava]?p.ava:AV_IDS[k++%AV_IDS.length])+'</div><span>'+esc(p.name)+
       '</span><span class="tag">'+tag+'</span>';
+    // 房主可以把別人請出房間（離線佔著名單的人也可以）。按第一下 ✕ 變成「踢出？」，3 秒內再按一下才會踢
+    if(host && !playing && p.pid!==Online.pid){
+      const b=document.createElement('button'), arm=kickArm.pid===p.pid && kickArm.until>Date.now();
+      if(arm) row.classList.add('arming');
+      b.className='kick'+(arm?' arm':''); b.textContent=arm?'踢出？':'✕'; b.setAttribute('aria-label','把 '+p.name+' 踢出房間');
+      b.addEventListener('click',()=>{
+        if(kickArm.pid===p.pid && kickArm.until>Date.now()){ kickArm.pid=''; Online.kick(p.pid,p.name); }
+        else { kickArm.pid=p.pid; kickArm.until=Date.now()+3000; clearTimeout(kickArm.timer); kickArm.timer=setTimeout(()=>{ if(!$('#lobby').hidden) renderLobby(); },3050); sfx('draw'); }
+        renderLobby();
+      });
+      row.appendChild(b);
+    }
     box.appendChild(row);
   });
   for(let i=list.length;i<MAXP;i++){ const row=document.createElement('div'); row.className='prow empty'; row.textContent='等朋友加入…'; box.appendChild(row); }
   const min=Math.max(2,Math.min(MAXP,on.length));
   Online.total=Math.max(min,Math.min(MAXP,Online.total));
   $('#tVal').textContent=Online.total+' 人';
-  const playing=Online.meta.status==='playing';
   $('#lbHost').hidden=!host || playing;
   const bots=Online.total-on.length;
   $('#lbNote').textContent = playing ? '這一局還在進行，等大家回到房間再一起玩。' : host ? (bots>0 ? '不足的 '+bots+' 位由電腦補上。' : '全部都是真人玩家。') : '等房主開始遊戲…';
