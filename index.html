@@ -513,7 +513,7 @@ input:focus{outline:3px solid var(--c1)}
         <input id="myName" maxlength="8" placeholder="你的名字" aria-label="你的名字" autocomplete="off" autocapitalize="off" spellcheck="false">
       </div>
     </div>
-    <div id="ver">第 19 版</div>
+    <div id="ver">第 20 版</div>
     <div id="menuTop"><button class="ico musicBtn" aria-label="背景音樂開關"></button></div>
     <button id="creditBtn">音樂出處</button>
   </section>
@@ -923,12 +923,54 @@ const AVATARS = (() => {
       blush(27,66)+blush(73,66)+'<ellipse cx="50" cy="63" rx="4.5" ry="3.2" fill="#2B2B33"/>'+smile(67.5))},
     penguin:{name:'企鵝',svg:av('#DCEFFF',
       '<circle cx="50" cy="57" r="31" fill="#3B4B66"/><circle cx="40" cy="54" r="14" fill="#fff"/><circle cx="60" cy="54" r="14" fill="#fff"/><ellipse cx="50" cy="67" rx="20" ry="16" fill="#fff"/>'+
-      eye(39,53)+eye(61,53)+blush(31,64)+blush(69,64)+tri('M44 61h12l-6 7z','#FFA63D',3))}
+      eye(39,53)+eye(61,53)+blush(31,64)+blush(69,64)+tri('M44 61h12l-6 7z','#FFA63D',3))},
+    koala:{name:'無尾熊',svg:av('#E8EAF2',
+      '<circle cx="22" cy="40" r="15" fill="#9AA0AE"/><circle cx="22" cy="40" r="8.5" fill="#F3E4E6"/><circle cx="78" cy="40" r="15" fill="#9AA0AE"/><circle cx="78" cy="40" r="8.5" fill="#F3E4E6"/>'+
+      '<circle cx="50" cy="58" r="29" fill="#B4B9C6"/>'+eye(37,53)+eye(63,53)+blush(28,65)+blush(72,65)+
+      '<ellipse cx="50" cy="60" rx="6" ry="8" fill="#3A3A45"/>'+smile(71))},
+    tiger:{name:'老虎',svg:av('#FFE9CC',
+      '<circle cx="27" cy="32" r="10" fill="#F59A2E"/><circle cx="27" cy="32" r="5" fill="#FFD9C2"/><circle cx="73" cy="32" r="10" fill="#F59A2E"/><circle cx="73" cy="32" r="5" fill="#FFD9C2"/>'+
+      '<circle cx="50" cy="58" r="30" fill="#F9A53A"/><ellipse cx="50" cy="68" rx="17" ry="11" fill="#FFF3E2"/>'+
+      '<path d="M50 29v10M42 31l2 8M58 31l-2 8M21 54h9M22 61l8-1M79 54h-9M78 61l-8-1" stroke="#8A4B1E" stroke-width="3.5" stroke-linecap="round"/>'+
+      eye(38,52)+eye(62,52)+blush(29,65)+blush(71,65)+tri('M47 61.5h6l-3 3.6z','#C9614A',1.5)+smile(67))},
+    lion:{name:'獅子',svg:av('#FFF0C9',
+      '<circle cx="50" cy="56" r="39" fill="#E0842A"/><circle cx="29" cy="31" r="8" fill="#F7B84E"/><circle cx="71" cy="31" r="8" fill="#F7B84E"/>'+
+      '<circle cx="50" cy="58" r="27" fill="#FBC864"/><ellipse cx="50" cy="65.5" rx="13" ry="10" fill="#FFF0D6"/>'+
+      eye(39,53)+eye(61,53)+blush(30,64)+blush(70,64)+nose+smile(66))},
+    monkey:{name:'猴子',svg:av('#F5E3D3',
+      '<circle cx="19" cy="56" r="10" fill="#8A5533"/><circle cx="19" cy="56" r="5.5" fill="#F3C9A5"/><circle cx="81" cy="56" r="10" fill="#8A5533"/><circle cx="81" cy="56" r="5.5" fill="#F3C9A5"/>'+
+      '<circle cx="50" cy="56" r="30" fill="#8A5533"/><circle cx="40" cy="52" r="13" fill="#F6D5B3"/><circle cx="60" cy="52" r="13" fill="#F6D5B3"/><ellipse cx="50" cy="68" rx="19" ry="14" fill="#F6D5B3"/>'+
+      eye(39,53)+eye(61,53)+blush(31,65)+blush(69,65)+'<circle cx="47.5" cy="63" r="1.2" fill="#8A5533"/><circle cx="52.5" cy="63" r="1.2" fill="#8A5533"/>'+smile(69))},
+    hamster:{name:'倉鼠',svg:av('#FFEFD9',
+      '<circle cx="28" cy="32" r="9" fill="#F2A64B"/><circle cx="28" cy="32" r="5" fill="#FFC9D4"/><circle cx="72" cy="32" r="9" fill="#F2A64B"/><circle cx="72" cy="32" r="5" fill="#FFC9D4"/>'+
+      '<circle cx="50" cy="58" r="30" fill="#F8BE66"/><path d="M20.3 62Q36 52 50 66 64 52 79.7 62A30 30 0 0 1 20.3 62z" fill="#FFF8EC"/>'+
+      eye(38,52)+eye(62,52)+blush(29,66)+blush(71,66)+'<ellipse cx="50" cy="64.5" rx="3" ry="2.2" fill="#FF8FA8"/>'+smile(67.5))},
+    owl:{name:'貓頭鷹',svg:av('#EFE3D6',
+      tri('M26 40 20 18 44 28z','#8A5A3A')+tri('M74 40 80 18 56 28z','#8A5A3A')+
+      '<circle cx="50" cy="58" r="30" fill="#A8714A"/><ellipse cx="50" cy="75" rx="16" ry="10" fill="#FBEBD3"/><circle cx="38" cy="54" r="13" fill="#FBEBD3"/><circle cx="62" cy="54" r="13" fill="#FBEBD3"/>'+
+      eye(38,54)+eye(62,54)+blush(27,68)+blush(73,68)+tri('M46 62h8l-4 6z','#FFA63D',3))},
+    elephant:{name:'大象',svg:av('#E3EEF5',
+      '<ellipse cx="18" cy="54" rx="15" ry="21" fill="#9FB0C2"/><ellipse cx="19" cy="55" rx="9" ry="14" fill="#FFC9D4"/><ellipse cx="82" cy="54" rx="15" ry="21" fill="#9FB0C2"/><ellipse cx="81" cy="55" rx="9" ry="14" fill="#FFC9D4"/>'+
+      '<circle cx="50" cy="56" r="28" fill="#B7C5D4"/>'+eye(37,53)+eye(63,53)+blush(29,64)+blush(71,64)+
+      '<path d="M50 60v17q0 7 7 6" fill="none" stroke="#9FB0C2" stroke-width="10" stroke-linecap="round"/>')},
+    sheep:{name:'綿羊',svg:av('#E3F3EC',
+      '<g fill="#fff"><circle cx="50" cy="56" r="30"/><circle cx="50" cy="30" r="14"/><circle cx="32" cy="36" r="13"/><circle cx="68" cy="36" r="13"/><circle cx="24" cy="54" r="13"/><circle cx="76" cy="54" r="13"/><circle cx="30" cy="72" r="13"/><circle cx="70" cy="72" r="13"/><circle cx="50" cy="80" r="13"/></g>'+
+      '<ellipse cx="25" cy="50" rx="8" ry="5" fill="#F5C9B0" transform="rotate(20 25 50)"/><ellipse cx="75" cy="50" rx="8" ry="5" fill="#F5C9B0" transform="rotate(-20 75 50)"/>'+
+      '<ellipse cx="50" cy="61" rx="21" ry="20" fill="#FFE3CF"/><circle cx="42" cy="42" r="9" fill="#fff"/><circle cx="58" cy="42" r="9" fill="#fff"/><circle cx="50" cy="39" r="10" fill="#fff"/>'+
+      eye(41,59)+eye(59,59)+blush(34,68)+blush(66,68)+tri('M47.5 64h5l-2.5 3z','#E58CA0',1.5)+smile(69))},
+    duck:{name:'鴨子',svg:av('#DDF2FB',
+      '<circle cx="50" cy="58" r="30" fill="#FFF8EE" stroke="#E6D9C8" stroke-width="1.5"/>'+eye(36,52)+eye(64,52)+blush(25,63)+blush(75,63)+
+      '<ellipse cx="50" cy="65" rx="13" ry="6.5" fill="#FF9A2E"/><path d="M40 65.5q10 4 20 0" fill="none" stroke="#D9741A" stroke-width="1.6" stroke-linecap="round"/>')},
+    otter:{name:'水獺',svg:av('#DDF1EE',
+      '<circle cx="18" cy="52" r="6.5" fill="#5E3F30"/><circle cx="82" cy="52" r="6.5" fill="#5E3F30"/>'+
+      '<ellipse cx="50" cy="58" rx="32" ry="27" fill="#7A5140"/><ellipse cx="50" cy="66" rx="19" ry="13" fill="#F4E1C8"/>'+
+      '<path d="M32 65h-9M33 69l-8 2M68 65h9M67 69l8 2" stroke="#5B3A28" stroke-width="1.4" stroke-linecap="round"/>'+
+      eye(37,51)+eye(63,51)+blush(25,61)+blush(75,61)+nose+smile(66))}
   };
 })();
 const AV_IDS = Object.keys(AVATARS);
 // 生成的貼紙圖（由 build.py 從 art/cut 轉檔後填進來）；圖載不到時退回上面用程式畫的版本
-const AV_ART = {"pig": {"bg": "#FFE4EB", "img": "ava-pig-e9cc19fc.webp"}, "chick": {"bg": "#FFF4C7", "img": "ava-chick-8c84f6db.webp"}, "cat": {"bg": "#E4EEFF", "img": "ava-cat-13bbdd55.webp"}, "dog": {"bg": "#E3F6EA", "img": "ava-dog-519d42b6.webp"}, "rabbit": {"bg": "#F1E6FF", "img": "ava-rabbit-b123de61.webp"}, "bear": {"bg": "#FFEAD3", "img": "ava-bear-d50da5a9.webp"}, "frog": {"bg": "#E2F7D6", "img": "ava-frog-6324a49f.webp"}, "fox": {"bg": "#FFE6D2", "img": "ava-fox-996c38cc.webp"}, "panda": {"bg": "#E6ECF1", "img": "ava-panda-fc9820b8.webp"}, "penguin": {"bg": "#DCEFFF", "img": "ava-penguin-2edeaf48.webp"}};
+const AV_ART = {"pig": {"bg": "#FFE4EB", "img": "ava-pig-e9cc19fc.webp"}, "chick": {"bg": "#FFF4C7", "img": "ava-chick-8c84f6db.webp"}, "cat": {"bg": "#E4EEFF", "img": "ava-cat-13bbdd55.webp"}, "dog": {"bg": "#E3F6EA", "img": "ava-dog-519d42b6.webp"}, "rabbit": {"bg": "#F1E6FF", "img": "ava-rabbit-b123de61.webp"}, "bear": {"bg": "#FFEAD3", "img": "ava-bear-d50da5a9.webp"}, "frog": {"bg": "#E2F7D6", "img": "ava-frog-6324a49f.webp"}, "fox": {"bg": "#FFE6D2", "img": "ava-fox-996c38cc.webp"}, "panda": {"bg": "#E6ECF1", "img": "ava-panda-fc9820b8.webp"}, "penguin": {"bg": "#DCEFFF", "img": "ava-penguin-2edeaf48.webp"}, "koala": {"bg": "#E8EAF2", "img": "ava-koala-065f25e9.webp"}, "tiger": {"bg": "#FFE9CC", "img": "ava-tiger-5a0ccf9f.webp"}, "lion": {"bg": "#FFF0C9", "img": "ava-lion-f061954e.webp"}, "monkey": {"bg": "#F5E3D3", "img": "ava-monkey-6f58d882.webp"}, "hamster": {"bg": "#FFEFD9", "img": "ava-hamster-9ae5a57e.webp"}, "owl": {"bg": "#EFE3D6", "img": "ava-owl-f3449000.webp"}, "elephant": {"bg": "#E3EEF5", "img": "ava-elephant-3d877990.webp"}, "sheep": {"bg": "#E3F3EC", "img": "ava-sheep-8b15c306.webp"}, "duck": {"bg": "#DDF2FB", "img": "ava-duck-16ae4900.webp"}, "otter": {"bg": "#DDF1EE", "img": "ava-otter-d6cf1a9c.webp"}};
 function avaHTML(id){
   if(!AVATARS[id]) return esc(id||'');
   const art=AV_ART[id];
