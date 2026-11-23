@@ -474,6 +474,21 @@ input:focus{outline:3px solid var(--c1)}
 .shock{position:fixed;width:24px;height:24px;border-radius:50%;border:4px solid var(--sc);animation:shock .6s ease-out forwards}
 @keyframes shock{from{transform:scale(1);opacity:.95}to{transform:scale(15);opacity:0;border-width:1px}}
 .shard{position:fixed;border-radius:2px;z-index:3}
+/* 最後一張：跑過畫面的鹿；鬼牌：繞著牌飛的小幽靈 */
+.deer{position:fixed;left:0;top:0;width:min(38vh,156px);z-index:5;pointer-events:none;will-change:transform;
+  filter:drop-shadow(2px 0 0 #FFF8EA) drop-shadow(-2px 0 0 #FFF8EA) drop-shadow(0 2px 0 #FFF8EA) drop-shadow(0 -2px 0 #FFF8EA)}
+.deer svg{display:block;width:100%;height:auto;overflow:visible}
+.deer .lg{transform-box:fill-box;transform-origin:50% 8%;animation:deerLegA var(--lp,.22s) ease-in-out infinite}
+.deer .lg.b{animation-name:deerLegB}
+@keyframes deerLegA{0%,100%{transform:rotate(26deg)}50%{transform:rotate(-46deg)}}
+@keyframes deerLegB{0%,100%{transform:rotate(-26deg)}50%{transform:rotate(46deg)}}
+.deer .tl{transform-box:fill-box;transform-origin:100% 60%;animation:deerTail .13s ease-in-out infinite alternate}
+@keyframes deerTail{from{transform:rotate(-16deg)}to{transform:rotate(24deg)}}
+.dspark{position:fixed;z-index:4;color:#FFE28C;font-size:min(6.5vh,24px);line-height:1;pointer-events:none;text-shadow:0 0 8px rgba(255,226,140,.95)}
+.dpuff{position:fixed;z-index:4;width:min(8vh,30px);height:min(4.5vh,16px);border-radius:50%;background:rgba(255,248,234,.8);pointer-events:none}
+.spook{position:fixed;z-index:3;width:min(14vh,52px);pointer-events:none;filter:drop-shadow(0 0 7px rgba(183,123,255,.95))}
+.spook svg{display:block;width:100%;height:auto}
+.jflash{position:fixed;inset:0;z-index:6;background:#E9D5FF;pointer-events:none}
 .crown{position:fixed;z-index:4;width:var(--cw,30px);animation:crownIn .5s cubic-bezier(.2,1.5,.4,1)}
 .crown svg,.wcrown svg{display:block;width:100%;height:auto;filter:drop-shadow(0 3px 0 rgba(0,0,0,.3))}
 @keyframes crownIn{from{transform:translateY(-160%) rotate(-25deg);opacity:0}}
@@ -525,7 +540,7 @@ input:focus{outline:3px solid var(--c1)}
         <input id="myName" maxlength="8" placeholder="你的名字" aria-label="你的名字" autocomplete="off" autocapitalize="off" spellcheck="false">
       </div>
     </div>
-    <div id="ver">第 21 版</div>
+    <div id="ver">第 22 版</div>
     <div id="menuTop"><button class="ico musicBtn" aria-label="背景音樂開關"></button></div>
     <button id="creditBtn">音樂出處</button>
   </section>
@@ -1081,6 +1096,8 @@ function sfx(k){
     else if(k==='pop'){ tone(900,t,.07,'square',.18,120); tone(70,t,.3,'sine',.3,35); }
     else if(k==='joker'){ [196,233,294,392].forEach(f=>tone(f,t,.9,'sawtooth',.05)); [784,988,1175].forEach((f,i)=>tone(f,t+.25+i*.09,.3,'triangle',.09)); }
     else if(k==='splat'){ tone(210,t,.16,'sawtooth',.09,55); tone(90,t,.22,'sine',.2,40); }
+    else if(k==='hoof'){ tone(620,t,.045,'square',.05,260); tone(180,t,.06,'sine',.1,90); }
+    else if(k==='ghost'){ tone(392,t,.55,'sine',.07,784); tone(587,t+.18,.5,'sine',.05,294); tone(880,t+.5,.4,'triangle',.04,440); }
     else if(k==='kiss'){ tone(784,t,.09,'sine',.09,1175); tone(1175,t+.09,.18,'sine',.08,1568); }
     else if(k==='crazy'){ [262,330,392,523,659,784,1047].forEach((f,i)=>tone(f,t+i*.055,.12,'square',.05)); tone(110,t+.42,.5,'sawtooth',.07,55); tone(1568,t+.42,.35,'triangle',.08); }
     else if(k==='final'){ tone(330,t,.42,'triangle',.1,1320); tone(660,t+.1,.34,'sine',.07,1760); [1047,1319,1568].forEach((f,i)=>tone(f,t+.46+i*.05,.2,'triangle',.08)); }
@@ -1666,12 +1683,79 @@ async function spotIn(card,from,jk){
   return {el,dim,rays,to};
 }
 function spotOut(sp){ sp.dim.classList.add('out'); sp.rays.classList.add('out'); setTimeout(()=>{ sp.dim.remove(); sp.rays.remove(); },300); }
+const SVG_DEER = '<svg viewBox="0 -18 200 172">'
+ +'<rect class="lg b" x="55" y="92" width="12" height="52" rx="6" fill="#A8652E"/><rect class="lg" x="120" y="92" width="12" height="52" rx="6" fill="#A8652E"/>'
+ +'<g class="tl"><ellipse cx="33" cy="76" rx="11" ry="8" fill="#FFF8EA"/></g>'
+ +'<ellipse cx="88" cy="86" rx="56" ry="30" fill="#D98E4A"/><ellipse cx="90" cy="101" rx="40" ry="13" fill="#F7DDB5"/>'
+ +'<circle cx="60" cy="74" r="4.5" fill="#FFF3DC"/><circle cx="77" cy="67" r="3.8" fill="#FFF3DC"/><circle cx="95" cy="71" r="4.2" fill="#FFF3DC"/><circle cx="72" cy="85" r="3.2" fill="#FFF3DC"/><circle cx="108" cy="82" r="3" fill="#FFF3DC"/>'
+ +'<g class="lg b"><rect x="66" y="94" width="13" height="54" rx="6.5" fill="#C97C3A"/><rect x="66" y="137" width="13" height="11" rx="5" fill="#5A3418"/></g>'
+ +'<g class="lg"><rect x="130" y="94" width="13" height="54" rx="6.5" fill="#C97C3A"/><rect x="130" y="137" width="13" height="11" rx="5" fill="#5A3418"/></g>'
+ +'<ellipse cx="137" cy="64" rx="16" ry="30" transform="rotate(24 137 64)" fill="#D98E4A"/>'
+ +'<path d="M149 22C147 9 144 2 137 -4M147 9l-11-3M151 14l-3-13" fill="none" stroke="#8A5A2B" stroke-width="5.5" stroke-linecap="round"/>'
+ +'<path d="M162 19C165 7 169 1 176 -4M165 8l11-2M163 13l1-12" fill="none" stroke="#8A5A2B" stroke-width="5.5" stroke-linecap="round"/>'
+ +'<ellipse cx="137" cy="27" rx="7" ry="13" transform="rotate(-48 137 27)" fill="#C97C3A"/><ellipse cx="136" cy="27" rx="3.4" ry="8" transform="rotate(-48 136 27)" fill="#FFB7B0"/>'
+ +'<circle cx="156" cy="42" r="25" fill="#E39C57"/><ellipse cx="175" cy="51" rx="14.5" ry="11.5" fill="#F7DDB5"/><ellipse cx="186" cy="46" rx="5.5" ry="4.5" fill="#5A3418"/>'
+ +'<circle cx="161" cy="38" r="6" fill="#3A2416"/><circle cx="163.2" cy="35.8" r="2.1" fill="#fff"/><ellipse cx="159" cy="53" rx="6.5" ry="3.8" fill="#FF9BAA" opacity=".85"/>'
+ +'<path d="M174 56q5 4 10 0" fill="none" stroke="#5A3418" stroke-width="2.2" stroke-linecap="round"/></svg>';
+const SVG_GHOST = '<svg viewBox="0 0 60 70"><path d="M30 4C14 4 6 16 6 32V63l8-7 8 7 8-7 8 7 8-7 8 7V32C54 16 46 4 30 4z" fill="#FFF8EA" stroke="#2A1B3D" stroke-width="3" stroke-linejoin="round"/>'
+ +'<ellipse cx="22" cy="28" rx="4.2" ry="5.5" fill="#2A1B3D"/><ellipse cx="38" cy="28" rx="4.2" ry="5.5" fill="#2A1B3D"/><circle cx="23.4" cy="26" r="1.5" fill="#fff"/><circle cx="39.4" cy="26" r="1.5" fill="#fff"/>'
+ +'<ellipse cx="15" cy="37" rx="4" ry="2.4" fill="#FF9BAA"/><ellipse cx="45" cy="37" rx="4" ry="2.4" fill="#FF9BAA"/>'
+ +'<path d="M24 40q6 6 12 0z" fill="#2A1B3D"/><path d="M27.5 42.5q2.5 6 5 0z" fill="#FF7A8A"/></svg>';
+// 最後一張亮相時，一隻鹿從畫面左邊一跳一跳地跑到右邊，身後留下金色星星
+function deerRun(tok){
+  const fx=$('#fx'), d=document.createElement('div');
+  d.className='deer'; d.innerHTML=SVG_DEER; fx.appendChild(d);
+  if(!d.animate){ d.remove(); return; }
+  const w=d.offsetWidth, h=d.offsetHeight, W=innerWidth+w*2, y0=Math.min(innerHeight-h-4,innerHeight*.69-h/2), hop=h*.34;
+  const n=Math.max(3,Math.round(W/(w*1.75))), dur=Math.max(950,Math.min(1350,650+W*.35)), kf=[], N=n*10;
+  const posAt=t=>{ const ph=t*n, f=ph%1; return {x:-w+W*t, y:y0-Math.abs(Math.sin(ph*Math.PI))*hop, r:(f-.5)*17}; };
+  for(let k=0;k<=N;k++){ const p=posAt(Math.min(k/N,.99999)); kf.push({transform:'translate('+p.x+'px,'+p.y+'px) rotate('+p.r+'deg)'}); }
+  d.style.setProperty('--lp',(dur/n)+'ms');
+  const an=d.animate(kf,{duration:dur,easing:'linear',fill:'forwards'});
+  an.onfinish=()=>d.remove();
+  const live=()=>tok===token && state && d.isConnected, t0=performance.now();
+  for(let k=1;k<n;k++) setTimeout(()=>{                       // 每次落地：蹄聲和一小團塵土
+    if(!live()) return;
+    sfx('hoof');
+    const pf=fxEl('dpuff',{x:-w+W*k/n+w*.45,y:y0+h*.93},'');
+    pf.animate([{transform:'scale(.4)',opacity:.9},{transform:'translate(-16px,-8px) scale(1.7)',opacity:0}],{duration:420,easing:'ease-out'}).onfinish=()=>pf.remove();
+  },dur*k/n);
+  const trail=setInterval(()=>{                               // 身後的星星
+    const t=(performance.now()-t0)/dur;
+    if(!live() || t>=1){ clearInterval(trail); return; }
+    const p=posAt(t), st=fxEl('dspark',{x:p.x+w*.25,y:p.y+h*(.3+Math.random()*.4)},'✦');
+    st.animate([{transform:'scale(.3) rotate(0deg)',opacity:1},{transform:'translate(-14px,'+(10+Math.random()*16)+'px) scale('+(1+Math.random()*.6)+') rotate(140deg)',opacity:0}],
+      {duration:560+Math.random()*240,easing:'ease-out'}).onfinish=()=>st.remove();
+  },55);
+}
+// 鬼牌亮相時，小幽靈從牌裡竄出來繞著牌飛；炸開時四散飛走
+function ghostsIn(mid,H,dur){
+  const list=[], n=6, R=H*.78;
+  for(let i=0;i<n;i++){
+    const g=fxEl('spook',mid,SVG_GHOST), a0=i/n*Math.PI*2, turn=Math.PI*2.2, kf=[];
+    if(!g.animate){ g.remove(); continue; }
+    for(let k=0;k<=24;k++){ const t=k/24, e=1-Math.pow(1-t,2.4), an=a0+t*turn, r=R*e;
+      kf.push({transform:'translate('+Math.cos(an)*r*1.3+'px,'+(Math.sin(an)*r*.8+Math.sin(t*Math.PI*6+i)*5)+'px) scale('+(.2+.8*e)+') rotate('+Math.sin(t*Math.PI*5+i)*14+'deg)',opacity:Math.min(1,t*6)}); }
+    g.animate(kf,{duration:dur,easing:'linear',fill:'forwards'});
+    const af=a0+turn; list.push({g,an:af,x:Math.cos(af)*R*1.3,y:Math.sin(af)*R*.8});
+  }
+  return list;
+}
+function ghostsOut(list){
+  const d=Math.max(innerWidth,innerHeight)*.75;
+  list.forEach(o=>{
+    o.g.animate([{transform:'translate('+o.x+'px,'+o.y+'px) scale(1)',opacity:1},
+      {transform:'translate('+(o.x+Math.cos(o.an)*d)+'px,'+(o.y+Math.sin(o.an)*d)+'px) scale(1.7) rotate(25deg)',opacity:0}],
+      {duration:540,easing:'cubic-bezier(.3,0,.8,.5)',fill:'forwards'}).onfinish=()=>o.g.remove();
+  });
+}
 // 最後一張：中央亮相，再砸到棄牌堆（slam=false 時只飛過去，後面還有全出牌的牌要跟上）
 async function finalFly(e,from,tok,slam){
   sfx('final');
   const sp=await spotIn(e.card,from,false);
   if(tok!==token || !state){ return; }
-  await sleep(430);
+  if(!REDUCED){ shockAt(centerOf(sp.to),'#FFE28C'); deerRun(tok); }
+  await sleep(REDUCED?430:900);
   if(tok!==token || !state){ return; }
   sp.el.classList.remove('pulse'); spotOut(sp);
   const p=pileRect(), a=centerOf(sp.to), b=centerOf(p);
@@ -1689,10 +1773,13 @@ async function jokerShow(e,from,tok){
   if(tok!==token || !state) return;
   const mid=centerOf(sp.to), cap=fxEl('spotcap',{x:innerWidth/2,y:sp.to.top+sp.to.height+innerHeight*.07},'鬼牌！');
   quake(); shockAt(mid,'#FFD45C');
-  await sleep(880);
+  sfx('ghost'); const ghosts=ghostsIn(mid,sp.to.height,1150);
+  await sleep(1150);
   if(tok!==token || !state) return;
   // 炸開
-  sfx('pop'); quake(); shockAt(mid,'#B77BFF'); cap.remove();
+  sfx('pop'); quake(); shockAt(mid,'#B77BFF'); cap.remove(); ghostsOut(ghosts);
+  const fl=document.createElement('div'); fl.className='jflash'; $('#fx').appendChild(fl);
+  if(fl.animate) fl.animate([{opacity:.75},{opacity:0}],{duration:280,easing:'ease-out',fill:'forwards'}).onfinish=()=>fl.remove(); else fl.remove();
   if(sp.el.animate) sp.el.animate([{transform:'none',opacity:1},{transform:'scale(1.9) rotate(14deg)',opacity:0}],{duration:300,easing:'ease-out',fill:'forwards'});
   const cols=['#FFD45C','#B77BFF','#FFF8EA'].concat(HEX);
   for(let k=0;k<26;k++){
