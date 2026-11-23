@@ -303,6 +303,18 @@ input:focus{outline:3px solid var(--c1)}
 @keyframes splat{0%{transform:scale(.2);opacity:1}5%{transform:scale(1.22)}9%{transform:scale(1)}72%{transform:scale(1);opacity:1}
   100%{transform:translateY(24%) scale(1);opacity:0}}
 .bit{position:fixed;border-radius:40%;z-index:58;pointer-events:none}
+#emoMenu button{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.pow{--s:min(27vh,100px);position:fixed;width:var(--s);height:var(--s);z-index:58;pointer-events:none}
+.pow svg{width:100%;height:100%}
+.lovebit{position:fixed;font-size:min(7vh,25px);line-height:1;z-index:58;pointer-events:none}
+.lovering{position:fixed;width:min(22vh,84px);height:min(22vh,84px);border-radius:50%;border:5px solid #FF6F9C;z-index:58;pointer-events:none}
+.dizzy{position:fixed;font-size:min(5.5vh,19px);line-height:1;z-index:58;pointer-events:none}
+.myface{position:fixed;font-size:min(13vh,46px);line-height:1;z-index:58;pointer-events:none;filter:drop-shadow(0 3px 3px rgba(0,0,0,.4))}
+.combo{position:fixed;padding:2px 10px;border-radius:999px;background:#FFC21A;color:#0B1D24;font-weight:900;font-size:18px;
+  z-index:59;pointer-events:none;box-shadow:0 3px 0 rgba(0,0,0,.35);transform:rotate(-8deg);white-space:nowrap}
+.combo.love{background:#FF6F9C;color:#fff}
+.combo.pop{animation:comboPop .2s}
+@keyframes comboPop{0%{transform:rotate(-8deg) scale(1.8)}}
 .stink{position:fixed;width:14px;height:34px;z-index:58;pointer-events:none;opacity:0}
 .stink svg{width:100%;height:100%}
 #menuTop{position:absolute;top:calc(env(safe-area-inset-top) + 8px);right:calc(env(safe-area-inset-right) + 10px);z-index:5}
@@ -513,7 +525,7 @@ input:focus{outline:3px solid var(--c1)}
         <input id="myName" maxlength="8" placeholder="你的名字" aria-label="你的名字" autocomplete="off" autocapitalize="off" spellcheck="false">
       </div>
     </div>
-    <div id="ver">第 20 版</div>
+    <div id="ver">第 21 版</div>
     <div id="menuTop"><button class="ico musicBtn" aria-label="背景音樂開關"></button></div>
     <button id="creditBtn">音樂出處</button>
   </section>
@@ -615,7 +627,7 @@ input:focus{outline:3px solid var(--c1)}
       <p class="msg">以上音樂都來自 FreePD.com，以 CC0 1.0 釋出到公眾領域。<br>連線功能使用 Firebase JS SDK（Apache License 2.0）。</p>
       <div class="row-btns"><button class="btn" id="creditClose">關閉</button></div></div>
   </div>
-  <div id="emoMenu" hidden><button data-k="egg" aria-label="丟雞蛋">🥚</button><button data-k="poo" aria-label="丟大便">💩</button></div>
+  <div id="emoMenu" hidden><button data-k="egg" aria-label="丟雞蛋">🥚</button><button data-k="poo" aria-label="丟大便">💩</button><button data-k="heart" aria-label="送愛心">❤️</button></div>
   <div id="balloonHud" hidden><svg viewBox="0 0 100 100"><ellipse cx="50" cy="40" rx="27" ry="32" fill="#FF5A7A"/><path d="M44 70h12l-6 9z" fill="#E0405F"/><path d="M50 79q-7 8 0 15" fill="none" stroke="#FFF8EA" stroke-width="3" stroke-linecap="round"/><ellipse cx="40" cy="27" rx="6" ry="9" fill="#fff" opacity=".5"/></svg><b id="balloonN"></b></div>
   <div id="fx"></div>
   <div id="winFx" hidden><div class="rays"></div><div class="conf"></div><div class="wstack"><div class="wcrown"></div><span class="ava wava"></span><div class="wbig"></div><div class="wsub"></div></div></div>
@@ -1069,6 +1081,7 @@ function sfx(k){
     else if(k==='pop'){ tone(900,t,.07,'square',.18,120); tone(70,t,.3,'sine',.3,35); }
     else if(k==='joker'){ [196,233,294,392].forEach(f=>tone(f,t,.9,'sawtooth',.05)); [784,988,1175].forEach((f,i)=>tone(f,t+.25+i*.09,.3,'triangle',.09)); }
     else if(k==='splat'){ tone(210,t,.16,'sawtooth',.09,55); tone(90,t,.22,'sine',.2,40); }
+    else if(k==='kiss'){ tone(784,t,.09,'sine',.09,1175); tone(1175,t+.09,.18,'sine',.08,1568); }
     else if(k==='crazy'){ [262,330,392,523,659,784,1047].forEach((f,i)=>tone(f,t+i*.055,.12,'square',.05)); tone(110,t+.42,.5,'sawtooth',.07,55); tone(1568,t+.42,.35,'triangle',.08); }
     else if(k==='final'){ tone(330,t,.42,'triangle',.1,1320); tone(660,t+.1,.34,'sine',.07,1760); [1047,1319,1568].forEach((f,i)=>tone(f,t+.46+i*.05,.2,'triangle',.08)); }
     else if(k==='bad') tone(160,t,.16,'sawtooth',.06);
@@ -1417,8 +1430,10 @@ const EMO = {
   egg:{ico:'🥚',face:'😵',bits:['#FFFDF5','#FFFDF5','#FFC21A'],
     splat:'<svg viewBox="0 0 100 112"><rect x="27" y="70" width="9" height="30" rx="4.5" fill="#FFFDF5"/><rect x="60" y="74" width="8" height="22" rx="4" fill="#FFFDF5"/><path d="'+SVG_BLOB+'" fill="#FFFDF5"/><circle cx="52" cy="50" r="17" fill="#FFC21A"/><circle cx="46" cy="44" r="5" fill="#FFE27A"/></svg>'},
   poo:{ico:'💩',face:'🤢',bits:['#7A4A21','#5E3716','#9A6230'],
-    splat:'<svg viewBox="0 0 100 112"><rect x="34" y="72" width="9" height="24" rx="4.5" fill="#7A4A21"/><path d="'+SVG_BLOB+'" fill="#7A4A21" transform="rotate(70 50 50)"/><ellipse cx="42" cy="42" rx="11" ry="6" fill="#9A6230"/><circle cx="62" cy="58" r="6" fill="#5E3716"/><circle cx="35" cy="63" r="4" fill="#5E3716"/></svg>'}
+    splat:'<svg viewBox="0 0 100 112"><rect x="34" y="72" width="9" height="24" rx="4.5" fill="#7A4A21"/><path d="'+SVG_BLOB+'" fill="#7A4A21" transform="rotate(70 50 50)"/><ellipse cx="42" cy="42" rx="11" ry="6" fill="#9A6230"/><circle cx="62" cy="58" r="6" fill="#5E3716"/><circle cx="35" cy="63" r="4" fill="#5E3716"/></svg>'},
+  heart:{ico:'❤️',face:'🥰',love:true,bits:['#FF5C8A','#FF8FB1','#FFD1DF']}
 };
+const SVG_POW = '<svg viewBox="0 0 100 100"><path d="M50 2l9 27 24-17-10 28 27 4-23 15 17 22-28-5-2 28-14-24-18 21 1-29-27 5 19-21L2 40l28-3-8-27 23 17z" fill="#FFF6D8" stroke="#FFC21A" stroke-width="4" stroke-linejoin="round"/></svg>';
 const SVG_STINK = '<svg viewBox="0 0 20 50" fill="none" stroke="#9BD14B" stroke-width="4" stroke-linecap="round"><path d="M10 48c-8-8 8-12 0-22s8-14 0-24"/></svg>';
 const reactions={};
 let emoCool=0, pressTimer=0, pressSeat=null, pressXY=null, emoTimer=0;
@@ -1438,17 +1453,25 @@ function openEmoMenu(pi){
   restart(m,'pop'); sfx('draw');
   clearTimeout(emoTimer); emoTimer=setTimeout(closeEmoMenu,5000);
 }
-function closeEmoMenu(){ clearTimeout(emoTimer); $('#emoMenu').hidden=true; }
+let fireTimer=0;
+const botBack={}, combos={}, fxAt={};
+function stopFire(){ clearInterval(fireTimer); fireTimer=0; }
+function keepEmoMenu(){ clearTimeout(emoTimer); emoTimer=setTimeout(closeEmoMenu,4000); }
+function closeEmoMenu(){ stopFire(); clearTimeout(emoTimer); $('#emoMenu').hidden=true; }
 function throwAt(to,kind){
-  if(!state || to===ME || !seats[to]) return;
-  if(Date.now()<emoCool) return;
-  emoCool=Date.now()+1200;
+  if(!state || to===ME || !seats[to] || !EMO[kind]) return;
+  const now=Date.now();
+  if(now<emoCool) return;
+  emoCool=now+130;                                // 可以連續丟，只擋掉同一瞬間的重複觸發
   sendEmote(ME,to,kind);
-  if(seats[to].bot && Math.random()<0.35){        // 電腦偶爾會丟回來
+  if(seats[to].bot && now>(botBack[to]||0) && Math.random()<0.3){   // 電腦偶爾會回敬，連續丟時不會每一發都回
+    botBack[to]=now+2600;
     const tok=token, me=ME;
-    setTimeout(()=>{ if(tok===token && state) sendEmote(to,me,Math.random()<.5?'egg':'poo'); },1500);
+    const back = kind==='heart' ? (Math.random()<.75?'heart':'egg') : (Math.random()<.5?'egg':'poo');
+    setTimeout(()=>{ if(tok===token && state) sendEmote(to,me,back); },1500);
   }
 }
+function fxSfx(k){ const now=Date.now(); if(now<(fxAt[k]||0)) return; fxAt[k]=now+70; sfx(k); }
 function sendEmote(from,to,kind){
   if(mode==='online') Online.emote(from,to,kind);
   playEmote(from,to,kind);
@@ -1457,42 +1480,126 @@ async function playEmote(from,to,kind){
   const E=EMO[kind];
   if(!E || !state || !view || $('#table').hidden) return;
   if(!(from>=0 && from<seats.length && to>=0 && to<seats.length) || from===to) return;
-  const tok=token, a=targetPoint(from), b=targetPoint(to);
+  const fx=$('#fx'), rm=el=>()=>el.remove();
+  if(fx.querySelectorAll('.proj').length>=24) return;          // 同時在飛的東西有上限，連續丟也不會卡
+  const tok=token, a=targetPoint(from), c=targetPoint(to);
+  const b={x:c.x+(Math.random()-.5)*38, y:c.y+(Math.random()-.5)*24};   // 落點稍微散開，連續丟才不會全疊在同一點
   const el=fxEl('proj',b,E.ico);
-  sfx('throw');
+  fxSfx('throw');
+  const dx=a.x-b.x, dy=a.y-b.y, len=Math.hypot(dx,dy)||1;
   if(el.animate && !REDUCED){
-    const dx=a.x-b.x, dy=a.y-b.y, lift=50+Math.abs(dx)*0.12, kf=[];
+    const lift=50+Math.abs(dx)*0.12, kf=[];
     for(let k=0;k<=6;k++){ const t=k/6;
-      kf.push({transform:'translate('+dx*(1-t)+'px,'+(dy*(1-t)-lift*4*t*(1-t))+'px) rotate('+(540*t)+'deg) scale('+(0.7+0.5*Math.sin(Math.PI*t)+0.3*t)+')'}); }
-    try{ await el.animate(kf,{duration:560,easing:'linear'}).finished; }catch(e){}
+      const rot = E.love ? Math.sin(t*Math.PI*3)*18 : 540*t;   // 愛心左右搖著飄過去，其他的翻滾
+      kf.push({transform:'translate('+dx*(1-t)+'px,'+(dy*(1-t)-lift*4*t*(1-t))+'px) rotate('+rot+'deg) scale('+(0.7+0.5*Math.sin(Math.PI*t)+0.3*t)+')'}); }
+    try{ await el.animate(kf,{duration:E.love?620:520,easing:'linear'}).finished; }catch(e){}
   }
   el.remove();
   if(tok!==token || !state) return;
-  sfx('splat');
-  const sp=fxEl('splat',b,E.splat); setTimeout(()=>sp.remove(),2400);
-  for(let i=0;i<10;i++){
-    const bit=fxEl('bit',b,''); const ang=Math.random()*Math.PI*2, dist=34+Math.random()*60, size=5+Math.random()*7;
-    bit.style.width=bit.style.height=size+'px'; bit.style.background=E.bits[i%E.bits.length];
-    const bx=Math.cos(ang)*dist, by=Math.sin(ang)*dist;
-    if(bit.animate && !REDUCED){
-      bit.animate([{transform:'translate(0,0) scale(1)',opacity:1},{transform:'translate('+bx*.7+'px,'+(by*.7-14)+'px) scale(1)',opacity:1,offset:.5},
-        {transform:'translate('+bx+'px,'+(by+34)+'px) scale(.5)',opacity:0}],{duration:520+Math.random()*260,easing:'ease-out'}).finished.then(()=>bit.remove(),()=>bit.remove());
-    } else bit.remove();
-  }
-  if(kind==='poo' && !REDUCED){
-    for(let i=0;i<3;i++){
-      const st=fxEl('stink',{x:b.x+(i-1)*22,y:b.y-26},SVG_STINK);
-      if(st.animate) st.animate([{transform:'translateY(10px)',opacity:0},{opacity:.95,offset:.25},{transform:'translateY(-46px)',opacity:0}],
-        {duration:1500,delay:250+i*220,fill:'both',easing:'ease-out'}).finished.then(()=>st.remove(),()=>st.remove());
-      else st.remove();
+  const busy=fx.childElementCount>70, now=Date.now();
+
+  // ---- 命中的瞬間 ----
+  if(E.love){
+    fxSfx('kiss');
+    if(!REDUCED){
+      const ring=fxEl('lovering',b,'');
+      if(ring.animate) ring.animate([{transform:'scale(.3)',opacity:.95},{transform:'scale(1.9)',opacity:0}],{duration:520,easing:'ease-out'}).finished.then(rm(ring),rm(ring));
+      else ring.remove();
+      const n=busy?3:7;
+      for(let i=0;i<n;i++){
+        const h=fxEl('lovebit',{x:b.x+(Math.random()-.5)*56,y:b.y+(Math.random()-.5)*20},['❤️','💗','💖'][i%3]);
+        const sway=(Math.random()-.5)*46, rise=60+Math.random()*60, sc=.7+Math.random()*.7;
+        if(h.animate) h.animate([{transform:'translate(0,8px) scale(.2)',opacity:0},
+          {transform:'translate('+sway*.4+'px,'+(-rise*.35)+'px) scale('+sc+')',opacity:1,offset:.3},
+          {transform:'translate('+sway+'px,'+(-rise)+'px) scale('+sc*.8+')',opacity:0}],
+          {duration:1000+Math.random()*500,delay:i*45,fill:'both',easing:'ease-out'}).finished.then(rm(h),rm(h));
+        else h.remove();
+      }
+    }
+  } else {
+    fxSfx('splat');
+    if(!REDUCED){
+      const pw=fxEl('pow',b,SVG_POW);
+      if(pw.animate) pw.animate([{transform:'scale(.25) rotate(-20deg)',opacity:1},{transform:'scale(1.15) rotate(8deg)',opacity:1,offset:.45},
+        {transform:'scale(1.4) rotate(14deg)',opacity:0}],{duration:300,easing:'ease-out'}).finished.then(rm(pw),rm(pw));
+      else pw.remove();
+    }
+    const old=fx.querySelectorAll('.splat'); if(old.length>=8) old[0].remove();
+    const sp=fxEl('splat',b,E.splat); setTimeout(()=>sp.remove(),2400);
+    if(sp.firstChild) sp.firstChild.style.transform='rotate('+((Math.random()-.5)*36)+'deg)';
+    for(let i=0, n=busy?4:10;i<n;i++){
+      const bit=fxEl('bit',b,''); const ang=Math.random()*Math.PI*2, dist=34+Math.random()*60, size=5+Math.random()*7;
+      bit.style.width=bit.style.height=size+'px'; bit.style.background=E.bits[i%E.bits.length];
+      const bx=Math.cos(ang)*dist, by=Math.sin(ang)*dist;
+      if(bit.animate && !REDUCED){
+        bit.animate([{transform:'translate(0,0) scale(1)',opacity:1},{transform:'translate('+bx*.7+'px,'+(by*.7-14)+'px) scale(1)',opacity:1,offset:.5},
+          {transform:'translate('+bx+'px,'+(by+34)+'px) scale(.5)',opacity:0}],{duration:520+Math.random()*260,easing:'ease-out'}).finished.then(rm(bit),rm(bit));
+      } else bit.remove();
+    }
+    if(kind==='poo' && !REDUCED && !busy){
+      for(let i=0;i<3;i++){
+        const st=fxEl('stink',{x:b.x+(i-1)*22,y:b.y-26},SVG_STINK);
+        if(st.animate) st.animate([{transform:'translateY(10px)',opacity:0},{opacity:.95,offset:.25},{transform:'translateY(-46px)',opacity:0}],
+          {duration:1500,delay:250+i*220,fill:'both',easing:'ease-out'}).finished.then(rm(st),rm(st));
+        else st.remove();
+      }
     }
   }
-  const box=seatBox(to); restart(box,'hit'); setTimeout(()=>box.classList.remove('hit'),450);
+
+  // ---- 被丟中的人：順著飛來的方向被撞開再彈回來；收到愛心是開心地跳兩下 ----
+  const box=seatBox(to);
+  if(box.animate && !REDUCED){
+    if(E.love) box.animate([{transform:'scale(1)'},{transform:'scale(1.09)'},{transform:'scale(1)'},{transform:'scale(1.05)'},{transform:'scale(1)'}],{duration:520,easing:'ease-in-out'});
+    else {
+      const ux=-dx/len*13, uy=-dy/len*13, r=ux>0?4:-4;
+      box.animate([{transform:'translate(0,0) rotate(0deg)'},{transform:'translate('+ux+'px,'+uy+'px) rotate('+r+'deg)',offset:.18},
+        {transform:'translate('+(-ux*.35)+'px,'+(-uy*.35)+'px) rotate('+(-r/2)+'deg)',offset:.5},{transform:'translate(0,0) rotate(0deg)'}],{duration:430,easing:'ease-out'});
+    }
+  } else { restart(box,'hit'); setTimeout(()=>box.classList.remove('hit'),450); }
+
   if(to!==ME){                                   // 被打中的人換個表情
-    reactions[to]={face:E.face,until:Date.now()+3600};
-    const av=document.querySelector('#seat'+to+' .ava'); if(av){ av.dataset.k='r'+E.face; av.textContent=E.face; }
+    reactions[to]={face:E.face,until:now+3600};
+    const av=document.querySelector('#seat'+to+' .ava');
+    if(av){
+      if(av.dataset.k!=='r'+E.face){ av.dataset.k='r'+E.face; av.textContent=E.face; }
+      if(av.animate && !REDUCED) av.animate(E.love
+        ? [{transform:'scale(1)'},{transform:'scale(1.4)'},{transform:'scale(1)'},{transform:'scale(1.25)'},{transform:'scale(1)'}]
+        : [{transform:'scale(1)'},{transform:'scale(1.45) rotate(-12deg)'},{transform:'scale(.85) rotate(6deg)'},{transform:'scale(1)'}],
+        {duration:E.love?560:420,easing:'ease-out'});
+      if(kind==='egg' && !REDUCED && now>(fxAt['dz'+to]||0)){      // 被雞蛋砸到：頭上冒星星轉圈
+        fxAt['dz'+to]=now+1300;
+        const r=av.getBoundingClientRect(), top={x:r.left+r.width/2,y:r.top+2};
+        for(let i=0;i<3;i++){
+          const d=fxEl('dizzy',top,i===1?'💫':'⭐'), kf=[];
+          for(let k=0;k<=16;k++){ const t=k/16, an=i*Math.PI*2/3+t*Math.PI*4;
+            kf.push({transform:'translate('+Math.cos(an)*r.width*.5+'px,'+Math.sin(an)*6+'px) scale('+(.8+.25*Math.sin(an))+')',opacity:t<.1?t*10:(t>.8?(1-t)*5:1)}); }
+          if(d.animate) d.animate(kf,{duration:1300,easing:'linear',fill:'both'}).finished.then(rm(d),rm(d)); else d.remove();
+        }
+      }
+    }
     setTimeout(()=>{ if(tok===token && state && view) renderOpps(); },3650);
+  } else if(!REDUCED && !fx.querySelector('.myface')){             // 自己被丟中：手牌上方跳出表情
+    const f=fxEl('myface',{x:c.x,y:c.y-Math.min(92,innerHeight*.22)},E.face);
+    if(f.animate) f.animate([{transform:'translateY(20px) scale(.3)',opacity:0},{transform:'translateY(0) scale(1.25)',opacity:1,offset:.18},
+      {transform:'translateY(0) scale(1)',opacity:1,offset:.75},{transform:'translateY(-18px) scale(1)',opacity:0}],{duration:1200,easing:'ease-out'}).finished.then(rm(f),rm(f));
+    else f.remove();
   }
+
+  // ---- 連續命中的計數 ----
+  const cb=combos[to], love=!!E.love;
+  const n = cb && now-cb.t<1500 && cb.love===love ? cb.n+1 : 1;
+  let ce = cb && cb.el && cb.el.isConnected ? cb.el : null;
+  if(cb) clearTimeout(cb.timer);
+  if(n>=2){
+    if(!ce) ce=fxEl('combo',c,'×'+n);
+    ce.textContent='×'+n; ce.classList.toggle('love',love);
+    const w=ce.offsetWidth, h=ce.offsetHeight;
+    ce.style.left=Math.max(6,Math.min(innerWidth-w-6,c.x+34))+'px'; ce.style.top=Math.max(6,Math.min(innerHeight-h-6,c.y-46))+'px';
+    restart(ce,'pop');
+  } else if(ce){ ce.remove(); ce=null; }
+  const rec={n,t:now,love,el:ce,timer:0};
+  rec.timer=setTimeout(()=>{ if(rec.el) rec.el.remove(); if(combos[to]===rec) delete combos[to]; },1500);
+  combos[to]=rec;
 }
 function bindEmotes(){
   ['#slotTop','#slotL','#slotR'].forEach(q=>{
@@ -1511,13 +1618,31 @@ function bindEmotes(){
   document.addEventListener('pointerdown',e=>{ if(!$('#emoMenu').hidden && !e.target.closest('#emoMenu')) closeEmoMenu(); },true);
   $('#emoMenu').addEventListener('click',e=>{
     const b=e.target.closest('button'); if(!b) return;
-    const pi=+$('#emoMenu').dataset.pi; closeEmoMenu(); throwAt(pi,b.dataset.k);
+    if(e.detail!==0) return;                       // 觸控和滑鼠走下面的按住連發，這裡只留給鍵盤
+    throwAt(+$('#emoMenu').dataset.pi,b.dataset.k); keepEmoMenu();
   });
+  // 選單丟完不關：點一下丟一個，按住不放就連續丟
+  const menu=$('#emoMenu');
+  menu.addEventListener('pointerdown',e=>{
+    const b=e.target.closest('button');
+    if(!b || (e.pointerType==='mouse' && e.button!==0)) return;
+    e.preventDefault(); stopFire();
+    const fire=()=>{
+      const pi=+menu.dataset.pi;
+      if(menu.hidden || !state || !seats[pi]){ stopFire(); return; }
+      throwAt(pi,b.dataset.k); keepEmoMenu();
+    };
+    fire(); fireTimer=setInterval(fire,170);
+  });
+  menu.addEventListener('contextmenu',e=>e.preventDefault());
+  window.addEventListener('pointerup',stopFire);
+  window.addEventListener('pointercancel',stopFire);
+  window.addEventListener('blur',stopFire);
 }
 function emoTip(){
-  if(store.get('lastcard-tip-emo')) return;
-  store.set('lastcard-tip-emo','1');
-  const tok=token; setTimeout(()=>{ if(tok===token && state && !document.querySelector('#fx .spotdim') && $('#winFx').hidden) toast('長按其他玩家的頭像，可以丟雞蛋或大便',3600); },1400);
+  if(store.get('lastcard-tip-emo2')) return;
+  store.set('lastcard-tip-emo2','1');
+  const tok=token; setTimeout(()=>{ if(tok===token && state && !document.querySelector('#fx .spotdim') && $('#winFx').hidden) toast('長按其他玩家的頭像，可以丟雞蛋、大便或送愛心；按住不放可以連續丟',4200); },1400);
 }
 
 // ---------- 決勝的一張牌：最後一張、鬼牌 ----------
