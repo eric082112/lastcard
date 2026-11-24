@@ -563,7 +563,7 @@ input:focus{outline:3px solid var(--c1)}
         <input id="myName" maxlength="8" placeholder="你的名字" aria-label="你的名字" autocomplete="off" autocapitalize="off" spellcheck="false">
       </div>
     </div>
-    <div id="ver">第 26 版</div>
+    <div id="ver">第 27 版</div>
     <div id="menuTop"><button class="ico musicBtn" aria-label="背景音樂開關"></button></div>
     <button id="creditBtn">音樂出處</button>
   </section>
@@ -654,7 +654,7 @@ input:focus{outline:3px solid var(--c1)}
     <div class="sheet"><h2>遊戲玩法</h2>
       <div id="modeList">
         <div class="optitem"><span>鬼牌機率</span><div class="seg" id="seg-joker"><button data-v="0">關</button><button data-v="0.5">0.5%</button><button data-v="0.8">0.8%</button><button data-v="1">1%</button></div></div>
-        <div class="optitem"><span>氣球</span><button class="sw" id="sw-balloon" aria-label="氣球" aria-pressed="false"></button></div>
+        <div class="optitem"><span>氣球機率</span><div class="seg" id="seg-balloon"><button data-v="0">關</button><button data-v="10">10%</button><button data-v="15">15%</button><button data-v="20">20%</button></div></div>
         <div class="optitem"><span>瘋狂模式</span><div class="seg" id="seg-crazy"><button data-v="0">關</button><button data-v="1">基本</button><button data-v="2">瘋狂</button><button data-v="3">抓狂</button></div></div>
         <p id="deckInfo"></p>
         <div class="optitem"><span>每局隨機換座位</span><button class="sw" id="sw-shuffle" aria-label="每局隨機換座位" aria-pressed="false"></button></div>
@@ -720,7 +720,7 @@ const Engine = (() => {
   const isDraw = c => c.v==='d2' || c.v==='w4';
   // 加開的玩法（房主在大廳開關）
   //   鬼牌：抽牌時有 0.5% 機率抽到（瘋狂模式 1%），不在牌堆裡，打出去直接獲勝
-  //   氣球：數字牌離開牌堆時有 10% 機率右上角帶著氣球（card.b）
+  //   氣球：數字牌離開牌堆時有 10／15／20% 機率（房主選）右上角帶著氣球（card.b）；瘋狂模式下 +2 也會
   //   瘋狂模式：牌堆換成 180 張的版本（見 makeDeck）；氣球爆炸抽的張數改成 3 的次方（見 popCards）
   const JOKER_P = 0.005, JOKER_P_CRAZY = 0.01, BALLOON_P = 0.10;
   // 鬼牌機率：房主可以選 0.5／0.8／1（單位 %）。舊版存的是 true：一般 0.5%、瘋狂模式 1%
@@ -729,8 +729,12 @@ const Engine = (() => {
   const jokerP = s => { const j=s.opts&&s.opts.joker; return typeof j==='number' ? j/100 : j ? (s.opts.crazy?JOKER_P_CRAZY:JOKER_P) : 0; };
   // 牌堆組成，給設定畫面顯示用
   function deckInfo(crazy){ const d=makeDeck(crazy), num=d.filter(isNum).length; return {total:d.length,num,special:d.length-num}; }
+  // 氣球機率：房主可以選 10／15／20（單位 %）。舊版存的是 true：10%
+  const BALLOON_RATES = [10,15,20];
+  const balloonRate = b => b===true ? 10 : BALLOON_RATES.indexOf(b)>=0 ? b : 0;
+  const canBalloon = (s,c) => isNum(c) || (c.v==='d2' && !!(s.opts && crazyLv(s.opts.crazy)));
   function mark(s,c){
-    if(c && isNum(c)){ if(s.opts && s.opts.balloon && s.rng()<BALLOON_P) c.b=1; else delete c.b; }
+    if(c && (isNum(c) || c.v==='d2')){ if(s.opts && canBalloon(s,c) && s.rng()<balloonRate(s.opts.balloon)/100) c.b=1; else delete c.b; }
     return c;
   }
   function newGame(n,rng,opts){
@@ -741,7 +745,7 @@ const Engine = (() => {
     // pending：+2／+4 疊加到現在累積要抽幾張。balloon：{n 幾顆, left 還要傳幾次, at 在誰手上}
     const s={players:Array.from({length:n},()=>({hand:[]})),deck,used:[],discard:[],color:0,dir:1,
              turn:Math.floor(rng()*n),phase:'play',drawnId:null,winner:-1,rng,
-             opts:{joker:jokerRate(opts&&opts.joker,crazy),balloon:!!(opts&&opts.balloon),crazy},nextId:1000,balloon:null,pending:0,tint:false};
+             opts:{joker:jokerRate(opts&&opts.joker,crazy),balloon:balloonRate(opts&&opts.balloon),crazy},nextId:1000,balloon:null,pending:0,tint:false};
     for(let k=0;k<7;k++) for(const p of s.players) p.hand.push(mark(s,deck.pop()));   // 開局不會發到鬼牌
     let i=deck.length-1; while(!isNum(deck[i])) i--;      // 起始牌一定是數字牌
     const first=deck.splice(i,1)[0]; delete first.b;
@@ -830,7 +834,7 @@ const Engine = (() => {
     ev.push({t:'play',pi,card,color:s.color,extra});
     settlePile(s,ev);
     if(!hand.length){ s.phase='over'; s.winner=pi; ev.push({t:'win',pi}); return ev; }
-    if(card.b && isNum(card)){                    // 帶氣球的數字牌：場上出現氣球，或是再疊一顆
+    if(card.b && canBalloon(s,card)){             // 帶氣球的牌（數字牌；瘋狂模式下還有 +2）：場上出現氣球，或是再疊一顆
       if(s.balloon) s.balloon.n++;
       else s.balloon={n:1,left:4+Math.floor(s.rng()*7),at:pi};    // 傳 4 到 10 次後爆炸
       ev.push({t:'balloon',pi,n:s.balloon.n});
@@ -873,7 +877,7 @@ const Engine = (() => {
   const points = c => isNum(c) ? +c.v : (c.c===-1 || c.v==='joker' ? 50 : 20);
   // 出這張牌之後手上會剩幾張
   const leftAfter = (hand,card) => card.v==='all' ? hand.filter(c=>c.c!==card.c).length : hand.length-1;
-  return {makeDeck,newGame,top,canPlay,playable,step,play,draw,pass,penalty,points,leftAfter,isDraw,popCards,crazyLv,jokerRate,deckInfo,JOKER_RATES};
+  return {makeDeck,newGame,top,canPlay,playable,step,play,draw,pass,penalty,points,leftAfter,isDraw,popCards,crazyLv,jokerRate,balloonRate,deckInfo,JOKER_RATES,BALLOON_RATES};
 })();
 
 // 電腦玩家
@@ -1051,8 +1055,8 @@ const store = {
   get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
   set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
 };
-const cfg = {n:4, sound:true, music:true, ava:'pig', opts:{joker:0,balloon:false,crazy:0,shuffle:false}};
-try{ const saved=JSON.parse(store.get('lastcard-cfg')||'null'); if(saved){ cfg.n=saved.n>=2&&saved.n<=6?saved.n:4; cfg.sound=saved.sound!==false; cfg.music=saved.music!==false; if(saved.ava) cfg.ava=saved.ava; if(saved.opts){ cfg.opts.crazy=Engine.crazyLv(saved.opts.crazy); cfg.opts.joker=Engine.jokerRate(saved.opts.joker,cfg.opts.crazy); cfg.opts.balloon=!!saved.opts.balloon; cfg.opts.shuffle=!!saved.opts.shuffle; } } }catch(e){}
+const cfg = {n:4, sound:true, music:true, ava:'pig', opts:{joker:0,balloon:0,crazy:0,shuffle:false}};
+try{ const saved=JSON.parse(store.get('lastcard-cfg')||'null'); if(saved){ cfg.n=saved.n>=2&&saved.n<=6?saved.n:4; cfg.sound=saved.sound!==false; cfg.music=saved.music!==false; if(saved.ava) cfg.ava=saved.ava; if(saved.opts){ cfg.opts.crazy=Engine.crazyLv(saved.opts.crazy); cfg.opts.joker=Engine.jokerRate(saved.opts.joker,cfg.opts.crazy); cfg.opts.balloon=Engine.balloonRate(saved.opts.balloon); cfg.opts.shuffle=!!saved.opts.shuffle; } } }catch(e){}
 function saveCfg(){ store.set('lastcard-cfg',JSON.stringify(cfg)); }
 
 let mode='local';           // 'local' 單機 / 'online' 連線
@@ -2352,11 +2356,11 @@ function leaveToMenu(msg){
 // 遊戲玩法：大廳按「遊戲玩法」打開視窗，三個開關各自獨立。只有房主能改，其他人打開看得到
 const OPT_KEYS = ['joker','balloon','crazy','shuffle'];
 const OPT_NAMES = {joker:'鬼牌',balloon:'氣球',crazy:'瘋狂模式',shuffle:'換座位'};
-const SW_KEYS = ['balloon','shuffle'], SEG_KEYS = ['joker','crazy'];
+const SW_KEYS = ['shuffle'], SEG_KEYS = ['joker','balloon','crazy'];
 const CRAZY_NAMES = ['','基本','瘋狂','抓狂'];
 // joker：鬼牌機率（%，0 是關）；crazy：瘋狂模式等級（0 關、1 基本、2 瘋狂、3 抓狂）。舊版存的 true 也讀得懂
-function roomOpts(){ const o=Online.meta.opts||{}, lv=Engine.crazyLv(o.crazy); return {joker:Engine.jokerRate(o.joker,lv),balloon:!!o.balloon,crazy:lv,shuffle:!!o.shuffle}; }
-function optLabel(k,o){ return k==='joker' ? '鬼牌 '+o.joker+'%' : k==='crazy' ? '瘋狂模式・'+CRAZY_NAMES[o.crazy] : OPT_NAMES[k]; }
+function roomOpts(){ const o=Online.meta.opts||{}, lv=Engine.crazyLv(o.crazy); return {joker:Engine.jokerRate(o.joker,lv),balloon:Engine.balloonRate(o.balloon),crazy:lv,shuffle:!!o.shuffle}; }
+function optLabel(k,o){ return k==='joker' ? '鬼牌 '+o.joker+'%' : k==='balloon' ? '氣球 '+o.balloon+'%' : k==='crazy' ? '瘋狂模式・'+CRAZY_NAMES[o.crazy] : OPT_NAMES[k]; }
 // 每局隨機換座位：第 0 個位子不動，其餘重新排列，而且一定和原本不同。
 // 大家看到的都是「自己在下面」，整桌一起轉一圈等於沒換，所以固定一個位子才保證左右鄰居真的變了。
 // 回傳新的順序（舊位子的編號）；不到 3 人時沒有東西可換，回傳 null
@@ -2371,7 +2375,7 @@ function renderOpts(){
   SW_KEYS.forEach(k=>{ const b=$('#sw-'+k); b.setAttribute('aria-pressed',o[k]?'true':'false'); b.disabled=!can; });
   SEG_KEYS.forEach(k=>$('#seg-'+k).querySelectorAll('button').forEach(b=>{ b.setAttribute('aria-pressed',Number(b.dataset.v)===o[k]?'true':'false'); b.disabled=!can; }));
   const di=Engine.deckInfo(o.crazy);
-  $('#deckInfo').textContent='牌堆 '+di.total+' 張：特殊卡 '+di.special+'、數字牌 '+di.num;
+  $('#deckInfo').textContent='牌堆 '+di.total+' 張：特殊卡 '+di.special+'、數字牌 '+di.num+(o.balloon ? (o.crazy ? '。氣球會出現在數字牌和 +2 上' : '。氣球會出現在數字牌上') : '');
   // 按鈕旁邊列出現在開了哪些，不用打開視窗也看得到
   $('#modeOn').innerHTML=OPT_KEYS.filter(k=>o[k]).map(k=>'<span class="'+k+'">'+optLabel(k,o)+'</span>').join('');
 }
