@@ -365,6 +365,14 @@ input:focus{outline:3px solid var(--c1)}
 .sw[aria-pressed=true]{background:var(--c2)}
 .sw[aria-pressed=true]::after{transform:translateX(26px)}
 .sw:disabled{opacity:.45}
+.seg{display:flex;flex:none;border-radius:12px;overflow:hidden;background:rgba(255,248,234,.16)}
+.seg button{border:0;margin:0;padding:6px 10px;min-width:46px;font:inherit;font-size:14px;font-weight:800;color:var(--cream);background:transparent;white-space:nowrap}
+.seg button[aria-pressed=true]{background:var(--c2);color:#fff}
+#seg-crazy button[aria-pressed=true]:not([data-v="0"]){background:var(--c0)}
+.seg button[data-v="0"][aria-pressed=true]{background:rgba(255,248,234,.34)}
+.seg button:disabled{opacity:.6}
+#deckInfo{margin:-.6vh 0 0;font-size:12.5px;opacity:.8;text-align:right;font-weight:700}
+#modeModal .sheet{max-height:96vh;overflow:auto}
 #balloonHud{position:fixed;width:min(15vh,56px);height:min(15vh,56px);z-index:45;pointer-events:none;transition:left .3s ease,top .3s ease;
   filter:drop-shadow(0 4px 6px rgba(0,0,0,.45))}
 #balloonHud svg{width:100%;height:100%;transform-origin:50% 95%;animation:bob .5s ease-in-out infinite alternate}
@@ -495,6 +503,14 @@ input:focus{outline:3px solid var(--c1)}
 .spook{position:fixed;z-index:3;width:min(14vh,52px);pointer-events:none;filter:drop-shadow(0 0 7px rgba(183,123,255,.95))}
 .spook svg{display:block;width:100%;height:auto}
 .jflash{position:fixed;inset:0;z-index:6;background:#E9D5FF;pointer-events:none}
+/* 最後一張的另外兩種演出：躍出水面的鯨魚、煙火 */
+.whale{position:fixed;left:0;top:0;width:min(44vh,180px);z-index:5;pointer-events:none;will-change:transform;
+  filter:drop-shadow(2px 0 0 #FFF8EA) drop-shadow(-2px 0 0 #FFF8EA) drop-shadow(0 2px 0 #FFF8EA) drop-shadow(0 -2px 0 #FFF8EA)}
+.whale svg{display:block;width:100%;height:auto;overflow:visible}
+.whale .fl{transform-box:fill-box;transform-origin:100% 100%;animation:deerTail .16s ease-in-out infinite alternate}
+.wdrop{position:fixed;z-index:4;width:min(3.4vh,13px);height:min(3.4vh,13px);border-radius:50% 50% 50% 0;background:#8FD3FF;box-shadow:inset -2px -2px 0 rgba(255,255,255,.7);pointer-events:none}
+.fwtrail{position:fixed;z-index:4;width:4px;height:min(9vh,34px);border-radius:2px;background:linear-gradient(#FFF8EA,rgba(255,226,140,0));pointer-events:none}
+.fwp{position:fixed;z-index:4;width:min(3.6vh,14px);height:min(3.6vh,14px);border-radius:50%;background:var(--sc);box-shadow:0 0 8px var(--sc);pointer-events:none}
 .crown{position:fixed;z-index:4;width:var(--cw,30px);animation:crownIn .5s cubic-bezier(.2,1.5,.4,1)}
 .crown svg,.wcrown svg{display:block;width:100%;height:auto;filter:drop-shadow(0 3px 0 rgba(0,0,0,.3))}
 @keyframes crownIn{from{transform:translateY(-160%) rotate(-25deg);opacity:0}}
@@ -547,7 +563,7 @@ input:focus{outline:3px solid var(--c1)}
         <input id="myName" maxlength="8" placeholder="你的名字" aria-label="你的名字" autocomplete="off" autocapitalize="off" spellcheck="false">
       </div>
     </div>
-    <div id="ver">第 24 版</div>
+    <div id="ver">第 25 版</div>
     <div id="menuTop"><button class="ico musicBtn" aria-label="背景音樂開關"></button></div>
     <button id="creditBtn">音樂出處</button>
   </section>
@@ -637,9 +653,10 @@ input:focus{outline:3px solid var(--c1)}
   <div class="modal" id="modeModal" hidden>
     <div class="sheet"><h2>遊戲玩法</h2>
       <div id="modeList">
-        <div class="optitem"><span>鬼牌</span><button class="sw" id="sw-joker" aria-label="鬼牌" aria-pressed="false"></button></div>
+        <div class="optitem"><span>鬼牌機率</span><div class="seg" id="seg-joker"><button data-v="0">關</button><button data-v="0.5">0.5%</button><button data-v="0.8">0.8%</button><button data-v="1">1%</button></div></div>
         <div class="optitem"><span>氣球</span><button class="sw" id="sw-balloon" aria-label="氣球" aria-pressed="false"></button></div>
-        <div class="optitem"><span>瘋狂模式</span><button class="sw" id="sw-crazy" aria-label="瘋狂模式" aria-pressed="false"></button></div>
+        <div class="optitem"><span>瘋狂模式</span><div class="seg" id="seg-crazy"><button data-v="0">關</button><button data-v="1">基本</button><button data-v="2">瘋狂</button><button data-v="3">抓狂</button></div></div>
+        <p id="deckInfo"></p>
         <div class="optitem"><span>每局隨機換座位</span><button class="sw" id="sw-shuffle" aria-label="每局隨機換座位" aria-pressed="false"></button></div>
       </div>
       <div class="row-btns"><button class="btn" id="modeClose">關閉</button></div></div>
@@ -676,13 +693,18 @@ input:focus{outline:3px solid var(--c1)}
 // 規則引擎：不碰畫面，之後做連線版可以直接沿用
 const Engine = (() => {
   // 一般 124 張；瘋狂模式 180 張：+2 每色 8 張（共 32）、+4 共 16 張、變色 8 張、全出牌每色 8 張（共 32）
+  // 瘋狂模式分三級（lv）：1 基本＝上面的 180 張；2 瘋狂＝特殊卡全部 2 倍；3 抓狂＝特殊卡全部 3 倍，數字牌用兩副
+  const crazyLv = v => v===true ? 1 : (v===1||v===2||v===3) ? v : 0;
   function makeDeck(crazy){
     const d=[]; let id=0;
-    const nD2=crazy?8:2, nWild=crazy?8:4, nW4=crazy?16:4, nAll=crazy?8:4;
+    const lv=crazyLv(crazy), m=lv||1, nums=lv===3?2:1;
+    const nSR=2*m, nD2=(lv?8:2)*m, nWild=(lv?8:4)*m, nW4=(lv?16:4)*m, nAll=(lv?8:4)*m;
     for(let c=0;c<4;c++){
-      d.push({id:id++,c,v:'0'});
-      for(let n=1;n<=9;n++) for(let k=0;k<2;k++) d.push({id:id++,c,v:String(n)});
-      for(const v of ['skip','rev']) for(let k=0;k<2;k++) d.push({id:id++,c,v});
+      for(let r=0;r<nums;r++){
+        d.push({id:id++,c,v:'0'});
+        for(let n=1;n<=9;n++) for(let k=0;k<2;k++) d.push({id:id++,c,v:String(n)});
+      }
+      for(const v of ['skip','rev']) for(let k=0;k<nSR;k++) d.push({id:id++,c,v});
       for(let k=0;k<nD2;k++) d.push({id:id++,c,v:'d2'});
       for(let k=0;k<nAll;k++) d.push({id:id++,c,v:'all'});       // 全出牌：每色 4 張（瘋狂模式 8 張）
     }
@@ -701,19 +723,25 @@ const Engine = (() => {
   //   氣球：數字牌離開牌堆時有 10% 機率右上角帶著氣球（card.b）
   //   瘋狂模式：牌堆換成 180 張的版本（見 makeDeck）；氣球爆炸抽的張數改成 3 的次方（見 popCards）
   const JOKER_P = 0.005, JOKER_P_CRAZY = 0.01, BALLOON_P = 0.10;
+  // 鬼牌機率：房主可以選 0.5／0.8／1（單位 %）。舊版存的是 true：一般 0.5%、瘋狂模式 1%
+  const JOKER_RATES = [0.5,0.8,1];
+  const jokerRate = (j,crazy) => j===true ? (crazy?1:0.5) : JOKER_RATES.indexOf(j)>=0 ? j : 0;
+  const jokerP = s => { const j=s.opts&&s.opts.joker; return typeof j==='number' ? j/100 : j ? (s.opts.crazy?JOKER_P_CRAZY:JOKER_P) : 0; };
+  // 牌堆組成，給設定畫面顯示用
+  function deckInfo(crazy){ const d=makeDeck(crazy), num=d.filter(isNum).length; return {total:d.length,num,special:d.length-num}; }
   function mark(s,c){
     if(c && isNum(c)){ if(s.opts && s.opts.balloon && s.rng()<BALLOON_P) c.b=1; else delete c.b; }
     return c;
   }
   function newGame(n,rng,opts){
     rng = rng||Math.random;
-    const crazy=!!(opts&&opts.crazy), deck=shuffle(makeDeck(crazy),rng);
+    const crazy=crazyLv(opts&&opts.crazy), deck=shuffle(makeDeck(crazy),rng);
     // discard 只留桌面上看得到的最上面 3 張；更早出過的牌放進 used，等於壓在牌堆最底下
     // tint：這一局有沒有人出過變色牌或 +4（出過之後桌面才跟著顏色走）
     // pending：+2／+4 疊加到現在累積要抽幾張。balloon：{n 幾顆, left 還要傳幾次, at 在誰手上}
     const s={players:Array.from({length:n},()=>({hand:[]})),deck,used:[],discard:[],color:0,dir:1,
              turn:Math.floor(rng()*n),phase:'play',drawnId:null,winner:-1,rng,
-             opts:{joker:!!(opts&&opts.joker),balloon:!!(opts&&opts.balloon),crazy},nextId:1000,balloon:null,pending:0,tint:false};
+             opts:{joker:jokerRate(opts&&opts.joker,crazy),balloon:!!(opts&&opts.balloon),crazy},nextId:1000,balloon:null,pending:0,tint:false};
     for(let k=0;k<7;k++) for(const p of s.players) p.hand.push(mark(s,deck.pop()));   // 開局不會發到鬼牌
     let i=deck.length-1; while(!isNum(deck[i])) i--;      // 起始牌一定是數字牌
     const first=deck.splice(i,1)[0]; delete first.b;
@@ -744,7 +772,7 @@ const Engine = (() => {
   const hasJoker = s => s.players.some(p=>p.hand.some(c=>c.v==='joker'));
   function take(s,ev){
     // 鬼牌全場只會有一張：已經有人拿著，就不會再抽到第二張
-    if(s.opts && s.opts.joker && !hasJoker(s) && s.rng()<(s.opts.crazy?JOKER_P_CRAZY:JOKER_P)) return {id:s.nextId++,c:-2,v:'joker'};
+    if(s.opts && s.opts.joker && !hasJoker(s) && s.rng()<jokerP(s)) return {id:s.nextId++,c:-2,v:'joker'};
     if(!s.deck.length) recycle(s,ev,true);       // 上面的牌抽完了，底下還沒洗的先洗
     return s.deck.length ? mark(s,s.deck.pop()) : null;
   }
@@ -845,7 +873,7 @@ const Engine = (() => {
   const points = c => isNum(c) ? +c.v : (c.c===-1 || c.v==='joker' ? 50 : 20);
   // 出這張牌之後手上會剩幾張
   const leftAfter = (hand,card) => card.v==='all' ? hand.filter(c=>c.c!==card.c).length : hand.length-1;
-  return {makeDeck,newGame,top,canPlay,playable,step,play,draw,pass,penalty,points,leftAfter,isDraw,popCards};
+  return {makeDeck,newGame,top,canPlay,playable,step,play,draw,pass,penalty,points,leftAfter,isDraw,popCards,crazyLv,jokerRate,deckInfo,JOKER_RATES};
 })();
 
 // 電腦玩家
@@ -1023,8 +1051,8 @@ const store = {
   get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
   set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
 };
-const cfg = {n:4, sound:true, music:true, ava:'pig', opts:{joker:false,balloon:false,crazy:false,shuffle:false}};
-try{ const saved=JSON.parse(store.get('lastcard-cfg')||'null'); if(saved){ cfg.n=saved.n>=2&&saved.n<=6?saved.n:4; cfg.sound=saved.sound!==false; cfg.music=saved.music!==false; if(saved.ava) cfg.ava=saved.ava; if(saved.opts){ cfg.opts.joker=!!saved.opts.joker; cfg.opts.balloon=!!saved.opts.balloon; cfg.opts.crazy=!!saved.opts.crazy; cfg.opts.shuffle=!!saved.opts.shuffle; } } }catch(e){}
+const cfg = {n:4, sound:true, music:true, ava:'pig', opts:{joker:0,balloon:false,crazy:0,shuffle:false}};
+try{ const saved=JSON.parse(store.get('lastcard-cfg')||'null'); if(saved){ cfg.n=saved.n>=2&&saved.n<=6?saved.n:4; cfg.sound=saved.sound!==false; cfg.music=saved.music!==false; if(saved.ava) cfg.ava=saved.ava; if(saved.opts){ cfg.opts.crazy=Engine.crazyLv(saved.opts.crazy); cfg.opts.joker=Engine.jokerRate(saved.opts.joker,cfg.opts.crazy); cfg.opts.balloon=!!saved.opts.balloon; cfg.opts.shuffle=!!saved.opts.shuffle; } } }catch(e){}
 function saveCfg(){ store.set('lastcard-cfg',JSON.stringify(cfg)); }
 
 let mode='local';           // 'local' 單機 / 'online' 連線
@@ -1109,6 +1137,9 @@ function sfx(k){
     else if(k==='kiss'){ tone(784,t,.09,'sine',.09,1175); tone(1175,t+.09,.18,'sine',.08,1568); }
     else if(k==='crazy'){ [262,330,392,523,659,784,1047].forEach((f,i)=>tone(f,t+i*.055,.12,'square',.05)); tone(110,t+.42,.5,'sawtooth',.07,55); tone(1568,t+.42,.35,'triangle',.08); }
     else if(k==='final'){ tone(330,t,.42,'triangle',.1,1320); tone(660,t+.1,.34,'sine',.07,1760); [1047,1319,1568].forEach((f,i)=>tone(f,t+.46+i*.05,.2,'triangle',.08)); }
+    else if(k==='splash'){ tone(520,t,.28,'sine',.1,110); tone(1300,t,.14,'triangle',.04,380); tone(90,t,.2,'sine',.14,45); }
+    else if(k==='whistle'){ tone(480,t,.24,'sine',.035,1500); }
+    else if(k==='boom'){ tone(130,t,.28,'sine',.2,45); tone(2100,t,.22,'triangle',.03,700); tone(1500,t+.05,.2,'triangle',.025,500); }
     else if(k==='bad') tone(160,t,.16,'sawtooth',.06);
     else if(k==='win') [523,659,784,1047].forEach((f,i)=>tone(f,t+i*.11,.22));
     else if(k==='lose') [440,370,311].forEach((f,i)=>tone(f,t+i*.16,.26,'sine'));
@@ -1736,6 +1767,67 @@ function deerRun(tok){
       {duration:560+Math.random()*240,easing:'ease-out'}).onfinish=()=>st.remove();
   },55);
 }
+// 最後一張的第二種演出：一隻鯨魚從畫面下方躍出，越過牌的上方再落回去，起跳和落水都有水花
+const SVG_WHALE = '<svg viewBox="0 0 200 124">'
+ +'<g class="fl"><path d="M46 70C30 66 12 54 4 34c14-2 26 4 34 14C36 34 40 20 52 10c8 16 8 38 2 58z" fill="#3B8FD0"/></g>'
+ +'<ellipse cx="112" cy="70" rx="78" ry="44" fill="#4FA9E8"/><ellipse cx="120" cy="92" rx="56" ry="19" fill="#EAF6FF"/>'
+ +'<ellipse cx="98" cy="100" rx="17" ry="8" transform="rotate(28 98 100)" fill="#3B8FD0"/>'
+ +'<ellipse cx="100" cy="38" rx="20" ry="7" fill="#7CC4F5" opacity=".7"/>'
+ +'<circle cx="156" cy="62" r="6.5" fill="#22314A"/><circle cx="158.3" cy="59.6" r="2.3" fill="#fff"/><ellipse cx="148" cy="77" rx="7.5" ry="4.2" fill="#FF9BAA" opacity=".9"/>'
+ +'<path d="M162 80q9 6 18-2" fill="none" stroke="#22314A" stroke-width="2.6" stroke-linecap="round"/></svg>';
+function waterSplash(x,y,n,pow){
+  for(let i=0;i<n;i++){
+    const dp=fxEl('wdrop',{x,y},''), vx=(Math.random()-.5)*pow*1.5, up=pow*(.55+Math.random()*.75), dur=520+Math.random()*320, kf=[];
+    if(!dp.animate){ dp.remove(); continue; }
+    for(let k=0;k<=8;k++){ const t=k/8; kf.push({transform:'translate('+vx*t+'px,'+(-up*4*t*(1-t)+up*.5*t*t)+'px) rotate(-45deg) scale('+(1-.45*t)+')',opacity:t<.7?1:(1-t)/.3}); }
+    dp.animate(kf,{duration:dur,easing:'linear',fill:'forwards'}).onfinish=()=>dp.remove();
+  }
+}
+function whaleLeap(tok,mid){
+  const fx=$('#fx'), d=document.createElement('div');
+  d.className='whale'; d.innerHTML=SVG_WHALE; fx.appendChild(d);
+  if(!d.animate){ d.remove(); return; }
+  const w=d.offsetWidth, h=d.offsetHeight, W=innerWidth, H=innerHeight, dur=1250;
+  const x0=Math.max(w*.2,mid.x-Math.min(W*.4,H*.95)), x1=mid.x+(mid.x-x0), base=H+h*.7, top=Math.max(h*.35,mid.y-h*.95), rise=base-top;
+  const posAt=t=>({x:x0+(x1-x0)*t, y:base-rise*4*t*(1-t), r:Math.atan2(-rise*4*(1-2*t),x1-x0)*180/Math.PI});
+  const kf=[]; for(let k=0;k<=30;k++){ const p=posAt(k/30); kf.push({transform:'translate('+(p.x-w/2)+'px,'+(p.y-h/2)+'px) rotate('+p.r+'deg)'}); }
+  d.animate(kf,{duration:dur,easing:'linear',fill:'forwards'}).onfinish=()=>d.remove();
+  const live=()=>tok===token && state && d.isConnected, t0=performance.now();
+  sfx('splash'); waterSplash(x0+w*.1,H-6,14,H*.3);
+  setTimeout(()=>{ if(!live()) return; sfx('splash'); waterSplash(x1-w*.1,H-6,18,H*.36); },dur*.86);
+  const trail=setInterval(()=>{                               // 身上甩下來的水珠
+    const t=(performance.now()-t0)/dur;
+    if(!live() || t>=.9){ clearInterval(trail); return; }
+    if(t<.1) return;
+    const p=posAt(t), dp=fxEl('wdrop',{x:p.x-w*.3+Math.random()*w*.4,y:p.y+h*.2},'');
+    dp.animate([{transform:'rotate(-45deg) scale(.9)',opacity:1},{transform:'translate('+(-10-Math.random()*14)+'px,'+(H*.22+Math.random()*H*.12)+'px) rotate(-45deg) scale(.5)',opacity:0}],
+      {duration:520,easing:'ease-in'}).onfinish=()=>dp.remove();
+  },60);
+}
+// 最後一張的第三種演出：煙火從下方升空，在牌的四周炸開
+function fireworks(tok,mid){
+  const W=innerWidth, H=innerHeight, cols=['#FFD45C','#FF9BAA','#FFF8EA'].concat(HEX), n=7;
+  const live=()=>tok===token && state;
+  for(let i=0;i<n;i++) setTimeout(()=>{
+    if(!live()) return;
+    const side=i%2?1:-1, x=Math.max(30,Math.min(W-30,mid.x+side*(W*.12+Math.random()*W*.3))), y=H*(.14+Math.random()*.42), col=cols[(i*3+Math.floor(Math.random()*3))%cols.length];
+    const tr=fxEl('fwtrail',{x,y:H},'');
+    if(!tr.animate){ tr.remove(); return; }
+    sfx('whistle');
+    tr.animate([{transform:'translateY(0)',opacity:1},{transform:'translateY('+(y-H)+'px)',opacity:.5}],{duration:260,easing:'cubic-bezier(.2,.7,.4,1)',fill:'forwards'}).onfinish=()=>{
+      tr.remove(); if(!live()) return;
+      sfx('boom'); shockAt({x,y},col);
+      const m=18, R=H*(.2+Math.random()*.1);
+      for(let k=0;k<m;k++){
+        const a=k/m*Math.PI*2+Math.random()*.2, r=R*(k%2?1:.6), pt=fxEl('fwp',{x,y},'',k%3===0?'#FFF8EA':col);
+        pt.animate([{transform:'translate(0,0) scale(1.2)',opacity:1},{transform:'translate('+Math.cos(a)*r*.82+'px,'+Math.sin(a)*r*.82+'px) scale(1)',opacity:1,offset:.6},
+          {transform:'translate('+Math.cos(a)*r+'px,'+(Math.sin(a)*r+H*.09)+'px) scale(.45)',opacity:0}],{duration:760+Math.random()*200,easing:'cubic-bezier(.1,.7,.3,1)',fill:'forwards'}).onfinish=()=>pt.remove();
+      }
+    };
+  },i*150);
+}
+// 最後一張的三種演出輪流出現；用牌的編號決定，連線時每個人看到的是同一種
+const FINAL_FX = ['deer','whale','fireworks'];
 // 鬼牌亮相時，小幽靈從牌裡竄出來繞著牌飛；炸開時四散飛走
 function ghostsIn(mid,H,dur){
   const list=[], n=6, R=H*.78;
@@ -1762,8 +1854,9 @@ async function finalFly(e,from,tok,slam){
   sfx('final');
   const sp=await spotIn(e.card,from,false);
   if(tok!==token || !state){ return; }
-  if(!REDUCED){ shockAt(centerOf(sp.to),'#FFE28C'); deerRun(tok); }
-  await sleep(REDUCED?430:900);
+  const kind=FINAL_FX[((e.card.id|0)+(e.pi|0))%FINAL_FX.length];
+  if(!REDUCED){ const mid=centerOf(sp.to); shockAt(mid,'#FFE28C'); if(kind==='whale') whaleLeap(tok,mid); else if(kind==='fireworks') fireworks(tok,mid); else deerRun(tok); }
+  await sleep(REDUCED?430:kind==='deer'?900:1150);
   if(tok!==token || !state){ return; }
   sp.el.classList.remove('pulse'); spotOut(sp);
   const p=pileRect(), a=centerOf(sp.to), b=centerOf(p);
@@ -2047,7 +2140,7 @@ async function pump(){
     if(!$('#table').hidden) Music.setZone(gameZone());
     if(intro && !$('#table').hidden){
       busy=true; render(); sfx('crazy');
-      await banner({big:'徹底瘋狂吧！',crazy:true,wild:true,dur:1900}); if(tok!==token) return;
+      await banner({big:state && state.opts && state.opts.crazy===3?'徹底抓狂吧！':'徹底瘋狂吧！',crazy:true,wild:true,dur:1900}); if(tok!==token) return;
     }
   }
   if(tok!==token) return;
@@ -2257,7 +2350,11 @@ function leaveToMenu(msg){
 // 遊戲玩法：大廳按「遊戲玩法」打開視窗，三個開關各自獨立。只有房主能改，其他人打開看得到
 const OPT_KEYS = ['joker','balloon','crazy','shuffle'];
 const OPT_NAMES = {joker:'鬼牌',balloon:'氣球',crazy:'瘋狂模式',shuffle:'換座位'};
-function roomOpts(){ const o=Online.meta.opts||{}; return {joker:!!o.joker,balloon:!!o.balloon,crazy:!!o.crazy,shuffle:!!o.shuffle}; }
+const SW_KEYS = ['balloon','shuffle'], SEG_KEYS = ['joker','crazy'];
+const CRAZY_NAMES = ['','基本','瘋狂','抓狂'];
+// joker：鬼牌機率（%，0 是關）；crazy：瘋狂模式等級（0 關、1 基本、2 瘋狂、3 抓狂）。舊版存的 true 也讀得懂
+function roomOpts(){ const o=Online.meta.opts||{}, lv=Engine.crazyLv(o.crazy); return {joker:Engine.jokerRate(o.joker,lv),balloon:!!o.balloon,crazy:lv,shuffle:!!o.shuffle}; }
+function optLabel(k,o){ return k==='joker' ? '鬼牌 '+o.joker+'%' : k==='crazy' ? '瘋狂模式・'+CRAZY_NAMES[o.crazy] : OPT_NAMES[k]; }
 // 每局隨機換座位：第 0 個位子不動，其餘重新排列，而且一定和原本不同。
 // 大家看到的都是「自己在下面」，整桌一起轉一圈等於沒換，所以固定一個位子才保證左右鄰居真的變了。
 // 回傳新的順序（舊位子的編號）；不到 3 人時沒有東西可換，回傳 null
@@ -2269,13 +2366,16 @@ function seatPerm(n){
 }
 function renderOpts(){
   const o=roomOpts(), can=Online.isHost() && Online.meta.status!=='playing';
-  OPT_KEYS.forEach(k=>{ const b=$('#sw-'+k); b.setAttribute('aria-pressed',o[k]?'true':'false'); b.disabled=!can; });
+  SW_KEYS.forEach(k=>{ const b=$('#sw-'+k); b.setAttribute('aria-pressed',o[k]?'true':'false'); b.disabled=!can; });
+  SEG_KEYS.forEach(k=>$('#seg-'+k).querySelectorAll('button').forEach(b=>{ b.setAttribute('aria-pressed',Number(b.dataset.v)===o[k]?'true':'false'); b.disabled=!can; }));
+  const di=Engine.deckInfo(o.crazy);
+  $('#deckInfo').textContent='牌堆 '+di.total+' 張：特殊卡 '+di.special+'、數字牌 '+di.num;
   // 按鈕旁邊列出現在開了哪些，不用打開視窗也看得到
-  $('#modeOn').innerHTML=OPT_KEYS.filter(k=>o[k]).map(k=>'<span class="'+k+'">'+OPT_NAMES[k]+'</span>').join('');
+  $('#modeOn').innerHTML=OPT_KEYS.filter(k=>o[k]).map(k=>'<span class="'+k+'">'+optLabel(k,o)+'</span>').join('');
 }
-function toggleOpt(k){
+function toggleOpt(k,v){
   if(!Online.code || !Online.isHost() || Online.meta.status==='playing') return;
-  const o=roomOpts(); o[k]=!o[k]; Online.meta.opts=o;
+  const o=roomOpts(); o[k]= v===undefined ? !o[k] : v; Online.meta.opts=o;
   cfg.opts[k]=o[k]; saveCfg();                    // 記住房主上次的選擇，下次開房間直接帶入
   try{ Online.ref('meta/opts').set(o); }catch(e){}
   sfx('draw'); renderOpts();
@@ -2586,7 +2686,8 @@ function init(){
     olBusy=false;
   });
   bindEmotes();
-  OPT_KEYS.forEach(k=>$('#sw-'+k).addEventListener('click',()=>toggleOpt(k)));
+  SW_KEYS.forEach(k=>$('#sw-'+k).addEventListener('click',()=>toggleOpt(k)));
+  SEG_KEYS.forEach(k=>$('#seg-'+k).querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>toggleOpt(k,Number(b.dataset.v)))));
   $('#modeBtn').addEventListener('click',()=>{ renderOpts(); $('#modeModal').hidden=false; });
   $('#modeClose').addEventListener('click',()=>{ $('#modeModal').hidden=true; });
   $('#modeModal').addEventListener('click',e=>{ if(e.target===e.currentTarget) e.currentTarget.hidden=true; });
