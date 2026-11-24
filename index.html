@@ -563,7 +563,7 @@ input:focus{outline:3px solid var(--c1)}
         <input id="myName" maxlength="8" placeholder="你的名字" aria-label="你的名字" autocomplete="off" autocapitalize="off" spellcheck="false">
       </div>
     </div>
-    <div id="ver">第 25 版</div>
+    <div id="ver">第 26 版</div>
     <div id="menuTop"><button class="ico musicBtn" aria-label="背景音樂開關"></button></div>
     <button id="creditBtn">音樂出處</button>
   </section>
@@ -2291,8 +2291,9 @@ function showResult(){
 function renderResultBtns(){
   const a=$('#againBtn'), r=$('#roomBtn');
   if(mode==='online'){
-    const lobby=Online.meta.status==='lobby', drv=Online.amDriver();
+    const lobby=Online.meta.status==='lobby', drv=Online.canAgain();
     a.hidden=lobby; a.disabled=!drv; a.textContent=drv?'再來一局':'等房主開下一局';
+    if(lobby) r.textContent='回到房間（分數保留）'; else r.textContent='回到房間';
     r.hidden=false; r.classList.toggle('primary',lobby);
     $('#menuBtn').textContent='離開房間';
   } else { a.hidden=false; a.disabled=false; a.textContent='再來一局'; r.hidden=true; $('#menuBtn').textContent='回主選單'; }
@@ -2300,7 +2301,8 @@ function renderResultBtns(){
 // 連線：一局結束後回到房間大廳，人還留在房間裡，不用重新加入
 function backToRoom(){
   if(mode!=='online' || !Online.code) return;
-  if(Online.meta.status!=='lobby'){ Online.meta.status='lobby'; try{ Online.ref('meta/status').set('lobby'); }catch(e){} }
+  // 只有房主回房間才把整個房間切回大廳；其他人先回去不影響還在結算畫面的人按「再來一局」
+  if(Online.meta.status!=='lobby' && Online.isHost()){ Online.meta.status='lobby'; try{ Online.ref('meta/status').set('lobby'); }catch(e){} }
   resetRun(); state=null; view=null; busy=true;
   showScreen('lobby'); renderLobby();
 }
@@ -2406,7 +2408,7 @@ function withTimeout(p,ms){
 }
 class UserErr extends Error{}
 const Online = {
-  db:null, code:'', pid:'', name:'', players:{}, meta:{}, total:4, refs:[], qSeq:-1, qJson:'', lastEmote:'',
+  db:null, code:'', pid:'', name:'', players:{}, meta:{}, total:4, refs:[], qSeq:-1, qJson:'', lastEmote:'', over:false, bank:{},
   async boot(){
     if(this.db) return;
     if(!window.firebase){                       // SDK 內嵌在頁面裡，第一次連線時才執行
@@ -2428,6 +2430,19 @@ const Online = {
   isOn(pid){ return pid===this.pid || !!(this.players[pid] && this.players[pid].online); },
   isHost(){ const on=this.sorted().filter(p=>this.isOn(p.pid)); return !!on.length && on[0].pid===this.pid; },
   // 幫電腦和離線玩家出牌的人：座位最前面、目前在線的真人
+  // 可以按「再來一局」的人：房主；房主這一局沒有座位時，改由代打的人
+  canAgain(){
+    const on=this.sorted().filter(p=>this.isOn(p.pid)), h=on[0];
+    if(h && seats.some(s=>!s.bot && s.pid===h.pid)) return h.pid===this.pid;
+    return this.amDriver();
+  },
+  // 房間裡累計的分數：真人用 pid、電腦用名字記。回到房間再開始也會接著算
+  sKey(s){ return s.bot ? 'bot:'+s.name : s.pid; },
+  bankOf(g){
+    const b=Object.assign({},g&&g.bank);
+    if(g && g.seats) g.seats.forEach((s,i)=>{ b[this.sKey(s)]=(g.scores||[])[i]||0; });
+    return b;
+  },
   amDriver(){
     for(let i=0;i<seats.length;i++){ const s=seats[i]; if(s.bot) continue; if(this.isOn(s.pid)) return i===ME; }
     return false;
@@ -2496,9 +2511,9 @@ const Online = {
       this.refs.forEach(r=>r.off());
       const me=this.ref('players/'+this.pid);
       me.onDisconnect().cancel();
-      if(this.meta.status==='playing') me.update({online:false}); else me.remove();
+      if(this.meta.status==='playing' && !this.over) me.update({online:false}); else me.remove();
     }catch(e){}
-    this.refs=[]; this.code=''; this.players={}; this.meta={}; this.qSeq=-1;
+    this.refs=[]; this.code=''; this.players={}; this.meta={}; this.qSeq=-1; this.over=false; this.bank={};
     try{ history.replaceState(null,'',location.pathname); }catch(e){}
   },
   async start(){
@@ -2508,9 +2523,11 @@ const Online = {
     for(let b=0;sts.length<total;b++) sts.push({bot:true,name:BOTS[b].name,ava:BOTS[b].ava});
     const perm = roomOpts().shuffle ? seatPerm(total) : null;
     if(perm) sts=perm.map(i=>sts[i]);
-    const prev=(await withTimeout(this.ref('game/seq').once('value'))).val()||0;
+    const old=(await withTimeout(this.ref('game').once('value'))).val()||{};
+    const prev=old.seq||0;
+    let bank={}; try{ if(old.json) bank=this.bankOf(JSON.parse(old.json)); }catch(e){}
     await withTimeout(this.ref('game').set({seq:prev+1,
-      json:JSON.stringify({state:Engine.newGame(total,undefined,roomOpts()),ev:[{t:'deal',start:true,shuf:!!perm}],scores:sts.map(()=>0),seats:sts})}));
+      json:JSON.stringify({state:Engine.newGame(total,undefined,roomOpts()),ev:[{t:'deal',start:true,shuf:!!perm}],scores:sts.map(s=>bank[this.sKey(s)]||0),seats:sts,bank})}));
     await this.ref('meta/status').set('playing');
   },
   again(){
@@ -2551,11 +2568,19 @@ const Online = {
   }
 };
 const kickArm={pid:'',until:0,timer:0};
+// 我在大廳、上一局已經結束、房間卻還沒切回大廳（原本的房主沒按就離開了）：輪到我當房主時補切
+function lobbyHostFix(){
+  if(Online.code && Online.over && Online.meta.status==='playing' && Online.isHost()){
+    Online.meta.status='lobby'; try{ Online.ref('meta/status').set('lobby'); }catch(e){}
+  }
+}
 function onGame(v){
   if(v.seq<Online.qSeq) return;
   if(v.seq===Online.qSeq && v.json===Online.qJson) return;
   Online.qSeq=v.seq; Online.qJson=v.json;
   let g; try{ g=JSON.parse(v.json); }catch(e){ return; }
+  Online.over = g.state.phase==='over'; Online.bank=Online.bankOf(g);
+  if(!$('#lobby').hidden) renderLobby();
   if(!g.seats.some(s=>s.pid===Online.pid)){ if(!$('#lobby').hidden) renderLobby(); return; }   // 這一局沒有我的位子
   if($('#table').hidden && Online.meta.status==='lobby' && g.state.phase==='over') return;     // 已經回到房間，上一局不用再顯示
   if(mode!=='online' || $('#table').hidden){
@@ -2565,7 +2590,7 @@ function onGame(v){
   queue.push({seq:v.seq,g}); pump();
 }
 function onPlayers(){
-  if(!$('#lobby').hidden) renderLobby();
+  if(!$('#lobby').hidden){ lobbyHostFix(); renderLobby(); }
   else if(mode==='online' && state && view && !pumping){
     renderOpps();
     if(!$('#resultModal').hidden) renderResultBtns();
@@ -2578,6 +2603,7 @@ function onMeta(){
 }
 function renderLobby(){
   const list=Online.sorted(), on=list.filter(p=>Online.isOn(p.pid)), host=Online.isHost(), playing=Online.meta.status==='playing';
+  const waitNext=playing && Online.over;
   $('#lbCode').textContent=Online.code;
   renderOpts();
   $('#lbLink').textContent=inviteUrl();
@@ -2586,7 +2612,8 @@ function renderLobby(){
   list.forEach(p=>{
     const isOn=Online.isOn(p.pid), row=document.createElement('div');
     row.className='prow'+(isOn?'':' off')+(p.pid===Online.pid?' me':'');
-    const tag = !isOn ? '離線' : (on[0] && on[0].pid===p.pid ? '房主' : '');
+    const pts=(Online.bank||{})[p.pid]||0;
+    const tag = [!isOn ? '離線' : (on[0] && on[0].pid===p.pid ? '房主' : ''), pts ? pts+' 分' : ''].filter(Boolean).join(' · ');
     row.innerHTML='<div class="ava">'+avaHTML(AVATARS[p.ava]?p.ava:AV_IDS[k++%AV_IDS.length])+'</div><span>'+esc(p.name)+
       '</span><span class="tag">'+tag+'</span>';
     // 房主可以把別人請出房間（離線佔著名單的人也可以）。按第一下 ✕ 變成「踢出？」，3 秒內再按一下才會踢
@@ -2609,7 +2636,7 @@ function renderLobby(){
   $('#tVal').textContent=Online.total+' 人';
   $('#lbHost').hidden=!host || playing;
   const bots=Online.total-on.length;
-  $('#lbNote').textContent = playing ? '這一局還在進行，等大家回到房間再一起玩。' : host ? (bots>0 ? '不足的 '+bots+' 位由電腦補上。' : '全部都是真人玩家。') : '等房主開始遊戲…';
+  $('#lbNote').textContent = waitNext ? '等房主開下一局，分數會接著累計…' : playing ? '這一局還在進行，等大家回到房間再一起玩。' : host ? (bots>0 ? '不足的 '+bots+' 位由電腦補上。' : '全部都是真人玩家。') : '等房主開始遊戲…';
 }
 function inviteUrl(){ return location.origin+location.pathname+'?room='+Online.code; }
 async function invite(){
@@ -2711,7 +2738,7 @@ function init(){
   $('#resumeBtn').addEventListener('click',()=>{ $('#pauseModal').hidden=true; });
   $('#redealBtn').addEventListener('click',()=>startLocal(true));
   $('#quitBtn').addEventListener('click',()=>{ if(mode==='online') leaveToMenu(); else toMenu(); });
-  $('#againBtn').addEventListener('click',()=>{ if(mode==='online'){ if(Online.amDriver()) Online.again(); } else startLocal(true); });
+  $('#againBtn').addEventListener('click',()=>{ if(mode==='online'){ if(Online.canAgain()) Online.again(); } else startLocal(true); });
   $('#menuBtn').addEventListener('click',()=>{ if(mode==='online') leaveToMenu(); else toMenu(); });
   $('#roomBtn').addEventListener('click',backToRoom);
   window.addEventListener('resize',()=>{ if(view && state){ layoutHand(); placeBalloon(); } });
