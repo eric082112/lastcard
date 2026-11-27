@@ -563,7 +563,7 @@ input:focus{outline:3px solid var(--c1)}
         <input id="myName" maxlength="8" placeholder="你的名字" aria-label="你的名字" autocomplete="off" autocapitalize="off" spellcheck="false">
       </div>
     </div>
-    <div id="ver">第 27 版</div>
+    <div id="ver">第 28 版</div>
     <div id="menuTop"><button class="ico musicBtn" aria-label="背景音樂開關"></button></div>
     <button id="creditBtn">音樂出處</button>
   </section>
@@ -1065,6 +1065,7 @@ let seats=[], scores=[];
 let state=null, view=null, busy=true, acting=false, token=0;
 let shownSeq=0, localSeq=0, resultSeq=-1;
 let called=false, callPending=false, callResolve=null, colorResolve=null;
+let toOneTok=-1, earlyCall=false;   // 正在打出「會剩一張」的那張牌：牌還在飛的時候就可以先喊
 let driverTimer=0, clockTimer=0, clockEnd=0;
 const queue=[]; let pumping=false; let waiters=[];
 
@@ -1320,6 +1321,7 @@ function layoutHand(){
 // UNO 按鈕一直都在；能按的時候才亮起來
 function unoReady(){
   if(callPending) return true;
+  if(toOneTok===token) return !earlyCall;
   if(!myTurn() || called) return false;
   const hand=state.players[ME].hand;
   return Engine.playable(state,ME).some(c=>Engine.leftAfter(hand,c)===1);
@@ -2226,7 +2228,7 @@ async function onCard(card,el){
     else { color=await pickColor(); if(tok!==token) return; if(color==null){ acting=false; settle(); return; } }
   }
   const toOne = Engine.leftAfter(state.players[me].hand,card)===1, pre=called;
-  called=false;
+  called=false; earlyCall=false; toOneTok=(toOne && !pre)?tok:-1; renderHud();
   const seq=await commit((st,sc)=>{
     if(st.turn!==me) return null;
     let ev; try{ ev=Engine.play(st,me,card.id,color); }catch(err){ return null; }
@@ -2237,8 +2239,9 @@ async function onCard(card,el){
   if(seq && toOne && !pre){
     await shown(seq); if(tok!==token) return;
     if(state.phase!=='over' && state.players[me].hand.length===1){
-      const ok=await waitCall(CALL_MS);
+      const ok=earlyCall || await waitCall(CALL_MS);   // 牌還在飛的時候已經喊過，就不必再等
       if(tok!==token) return;
+      toOneTok=-1; earlyCall=false;
       if(ok) await commit(st=>[{t:'uno',pi:me}]);
       else await commit(st=>{
         if(st.phase==='over' || st.players[me].hand.length!==1) return null;
@@ -2247,6 +2250,7 @@ async function onCard(card,el){
       if(tok!==token) return;
     }
   }
+  toOneTok=-1; earlyCall=false;
   acting=false; settle();
 }
 async function onDeck(){
@@ -2265,6 +2269,10 @@ async function onPass(){
 }
 function onUno(){
   if(callResolve){ callResolve(); return; }           // 出完牌後補喊
+  if(toOneTok===token){                               // 牌還在飛：先記下來，亮相完直接算喊過
+    if(!earlyCall){ earlyCall=true; sfx('call'); renderHud(); toast('已經喊 UNO',1000); }
+    return;
+  }
   if(unoReady()){ called=true; bubble(ME,'UNO！'); sfx('call'); renderHud(); toast('已經喊 UNO，出牌吧',1200); return; }
   sfx('bad');
   if(state && state.phase!=='over') toast('出完會剩一張的時候才能喊 UNO',1500);
@@ -2322,7 +2330,7 @@ function showScreen(id){
 function resetRun(){
   token++; queue.length=0; pumping=false; flushWaiters(true);
   clearTimeout(driverTimer); stopClock();
-  acting=false; callPending=false; callResolve=null; called=false; colorResolve=null;
+  acting=false; callPending=false; callResolve=null; called=false; colorResolve=null; toOneTok=-1; earlyCall=false;
   shownSeq=0; localSeq=0; resultSeq=-1;
   ['#colorModal','#pauseModal','#resultModal'].forEach(q=>$(q).hidden=true);
   cancelPress(); closeEmoMenu(); for(const k in reactions) delete reactions[k];
@@ -2724,7 +2732,8 @@ function init(){
   $('#modeModal').addEventListener('click',e=>{ if(e.target===e.currentTarget) e.currentTarget.hidden=true; });
   $('#deck').addEventListener('click',onDeck);
   $('#passBtn').addEventListener('click',onPass);
-  $('#unoBtn').addEventListener('click',onUno);
+  $('#unoBtn').addEventListener('pointerdown',e=>{ if(e.button) return; onUno(); });   // 手指一碰到就算，不等放開
+  $('#unoBtn').addEventListener('click',e=>{ if(e.detail===0) onUno(); });             // 鍵盤操作
   $('#soundBtn').addEventListener('click',()=>setSound(!cfg.sound));
   Music.init(); Music.setZone('menu'); renderMusicBtns();
   document.querySelectorAll('.musicBtn').forEach(b=>b.addEventListener('click',()=>Music.set(!cfg.music)));
